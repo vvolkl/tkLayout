@@ -1854,14 +1854,14 @@ namespace insur {
     if (name=="INNER") {
       logINFO("Drawing beam pipe");
       TPolyLine* beampipe  = new TPolyLine();
-      beampipe->SetPoint(0, 0                               , (simparms.bpRadius()+simparms.bpThickness())/2.);
-      beampipe->SetPoint(1, tracker.maxZ()*vis_safety_factor, (simparms.bpRadius()+simparms.bpThickness())/2.);
+      beampipe->SetPoint(0, 0                               , (simparms.bpRadius()+simparms.bpThickness()/2.));
+      beampipe->SetPoint(1, tracker.maxZ()*vis_safety_factor, (simparms.bpRadius()+simparms.bpThickness()/2.));
       beampipe->SetLineColor(14);
       beampipe->SetLineWidth(2);
       XYCanvasEC->cd();
-      drawCircle(simparms.bpRadius()+simparms.bpThickness(), true, 18); // "grey18"
+      drawCircle(simparms.bpRadius()+simparms.bpThickness()/2., true, 18); // "grey18"
       XYCanvas->cd();
-      drawCircle(simparms.bpRadius(), true, 18); // "grey18"
+      drawCircle(simparms.bpRadius()+simparms.bpThickness()/2., true, 18); // "grey18"
       RZCanvas->cd();
       beampipe->Draw("same");
     }
