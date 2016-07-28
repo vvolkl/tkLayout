@@ -230,6 +230,13 @@ template<> void SummaryFrameStyle<YZ>::operator()(TH2C& frame, TCanvas& canvas, 
   else             drawEtaTicks(frame.GetXaxis()->GetXmax(), frame.GetYaxis()->GetXmax(), 0, 60, 24, frame.GetXaxis()->GetLabelFont(), frame.GetXaxis()->GetLabelSize(), insur::vis_step_eta_short, insur::vis_step_eta_long, insur::vis_short_eta_coverage, insur::vis_trk_eta_coverage, insur::geom_max_eta_coverage);
 }
 
+template<> void SummaryFrameStyle<YZFull>::operator()(TH2C& frame, TCanvas& canvas, DrawerPalette& palette, bool isPixelType) const {
+  frame.Draw();
+
+  //drawEtaTicks(frame.GetXaxis()->GetXmax(), frame.GetYaxis()->GetXmax(), 0, 50, 50, frame.GetXaxis()->GetLabelFont(), frame.GetXaxis()->GetLabelSize(), step_eta_normal, trk_eta_coverage, max_eta_coverage);
+  if (isPixelType) drawEtaTicks(frame.GetXaxis()->GetXmax(), frame.GetYaxis()->GetXmax(), 0, 60, 24, frame.GetXaxis()->GetLabelFont(), frame.GetXaxis()->GetLabelSize(), insur::vis_step_eta_long, insur::vis_step_eta_long, insur::vis_short_eta_coverage, insur::vis_trk_eta_coverage, insur::geom_max_eta_coverage);
+  else             drawEtaTicks(frame.GetXaxis()->GetXmax(), frame.GetYaxis()->GetXmax(), 0, 60, 24, frame.GetXaxis()->GetLabelFont(), frame.GetXaxis()->GetLabelSize(), insur::vis_step_eta_short, insur::vis_step_eta_long, insur::vis_short_eta_coverage, insur::vis_trk_eta_coverage, insur::geom_max_eta_coverage);
+}
 
 
 template<> void SummaryFrameStyle<XY>::operator()(TH2C& frame, TCanvas& canvas, DrawerPalette& palette, bool isPixelType) const {
