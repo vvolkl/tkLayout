@@ -18,6 +18,8 @@ void Barrel::build() {
     for (int i = 1; i <= numLayers(); i++) {
       Layer* layer = GeometryFactory::make<Layer>();
       layer->myid(i);
+      layer->store(propertyTree());
+      if (layerNode.count(i) > 0) layer->store(layerNode.at(i));
 
       if      (i == 1)           { if (innerRadiusFixed()) layer->radiusMode(Layer::FIXED); layer->placeRadiusHint(innerRadius()); } 
       else if (i == numLayers()) { if (outerRadiusFixed()) layer->radiusMode(Layer::FIXED); layer->placeRadiusHint(outerRadius()); } 
@@ -29,8 +31,7 @@ void Barrel::build() {
         layer->sameParityRods(true);
       }
 
-      layer->store(propertyTree());
-      if (layerNode.count(i) > 0) layer->store(layerNode.at(i));
+
       layer->build();
       layer->rotateZ(barrelRotation());
       layer->rotateZ(layer->layerRotation());
