@@ -45,7 +45,7 @@ public:
   RodPair() :
       materialObject_(MaterialObject::ROD),
       startZMode("startZMode", parsedAndChecked(), StartZMode::MODULECENTER),
-      beamSpotCover("beamSpotCover", parsedAndChecked(), true)
+	beamSpotCover("beamSpotCover", parsedAndChecked(), true)
   {}
 
   void setup() {
@@ -56,6 +56,7 @@ public:
   }
   
   virtual double thickness() const = 0;
+  virtual bool isTilted() const = 0;
 
   int numModules() const { return zPlusModules_.size() + zMinusModules_.size(); }
   int numModulesSide(int side) const { return side >= 0 ? zPlusModules_.size() : zMinusModules_.size(); }
@@ -88,9 +89,9 @@ class StraightRodPair : public RodPair, public Clonable<StraightRodPair> {
   double computeNextZ(double newDsLength, double newDsDistance, double lastDsDistance, double lastZ, BuildDir direction, int parity);
   template<typename Iterator> vector<double> computeZList(Iterator begin, Iterator end, double startZ, BuildDir direction, int smallParity, bool fixedStartZ);
   template<typename Iterator> pair<vector<double>, vector<double>> computeZListPair(Iterator begin, Iterator end, double startZ, int recursionCounter);
-  void buildModules(Container& modules, const RodTemplate& rodTemplate, const vector<double>& posList, BuildDir direction, int parity, int side);
-  void buildFull(const RodTemplate& rodTemplate); 
-  void buildMezzanine(const RodTemplate& rodTemplate); 
+  void buildModules(Container& modules, const RodTemplate& rodTemplate, const vector<double>& posList, BuildDir direction, bool isPlusBigDeltaRod, int parity, int side);
+  void buildFull(const RodTemplate& rodTemplate, bool isPlusBigDeltaRod); 
+  void buildMezzanine(const RodTemplate& rodTemplate, bool isPlusBigDeltaRod); 
 
 public:
  
@@ -109,7 +110,6 @@ public:
   Property<bool, Default> allowCompressionCuts;
 
   PropertyNode<int> ringNode;
-
   
   StraightRodPair() :
               forbiddenRange      ("forbiddenRange"      , parsedOnly()),
@@ -123,10 +123,12 @@ public:
 	      ringNode            ("Ring"                , parsedOnly())
   {}
 
-  double thickness() const override { return smallDelta()*2. + maxModuleThickness(); }
 
-  
-  void build(const RodTemplate& rodTemplate);
+  double thickness() const override { return smallDelta()*2. + maxModuleThickness(); }
+  bool isTilted() const override { return false; }
+
+  void check() override;
+  void build(const RodTemplate& rodTemplate, bool isPlusBigDeltaRod);
 
   std::set<int> solveCollisionsZPlus();
   std::set<int> solveCollisionsZMinus();
@@ -143,10 +145,16 @@ struct TiltedModuleSpecs {
 };
 
 class TiltedRodPair : public RodPair, public Clonable<TiltedRodPair> {
+ 
   void buildModules(Container& modules, const RodTemplate& rodTemplate, const vector<TiltedModuleSpecs>& tmspecs, BuildDir direction, bool flip);
-public:
+
+ public :
+
   double thickness() const override { std::cerr << "thickness() for tilted rods gives incorrect results as it is calculated as maxR()-minR()\n"; return maxR() - minR(); }
+  bool isTilted() const override { return true; }
   void build(const RodTemplate& rodTemplate, const std::vector<TiltedModuleSpecs>& tmspecs, bool flip);
+
+  
 
 }; 
 

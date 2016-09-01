@@ -39,16 +39,14 @@ namespace insur {
         void prodcuts(std::vector<SpecParInfo>& t, std::ifstream& in, std::ofstream& out);
         void trackersens(std::vector<SpecParInfo>& t, std::ifstream& in, std::ofstream& out);
         void recomaterial(std::vector<SpecParInfo>& t, std::vector<RILengthInfo>& ri, std::ifstream& in, std::ofstream& out, bool wt = false);
-        void setExtendedHeader(const std::string& header) { extendedHeader_ = header; }
         void setSimpleHeader(const std::string& header) { simpleHeader_ = header; }
-        const std::string& getExtendedHeader() const { return extendedHeader_; }
         const std::string& getSimpleHeader() const { return simpleHeader_; }
     protected:
         void trackerLogicalVolume(std::ostringstream& stream, std::istream& instream); // takes the stream containing the tracker logical volume template and outputs it to the outstream
         void materialSection(std::string name, std::vector<Element>& e, std::vector<Composite>& c, std::ostringstream& stream);
-        void rotationSection(std::vector<Rotation>& r, std::string label, std::ostringstream& stream);
+        void rotationSection(std::map<std::string,Rotation>& r, std::string label, std::ostringstream& stream);
         void logicalPartSection(std::vector<LogicalInfo>& l, std::string label,  std::ostringstream& stream, bool wt = false);
-        void solidSection(std::vector<ShapeInfo>& s, std::string label, std::ostringstream& stream, std::istream& trackerVolumeTemplate, bool notobtid, bool wt = false);
+        void solidSection(std::vector<ShapeInfo>& s, std::vector<ShapeOperationInfo>& so, std::string label, std::ostringstream& stream, std::istream& trackerVolumeTemplate, bool notobtid, bool wt = false);
         void posPartSection(std::vector<PosInfo>& p, std::vector<AlgoInfo>& a, std::string label, std::ostringstream& stream);
         void specParSection(std::vector<SpecParInfo>& t, std::string label, std::ostringstream& stream);
         void algorithm(std::string name, std::string parent, std::vector<std::string>& params, std::ostringstream& stream);
@@ -59,8 +57,11 @@ namespace insur {
         void box(std::string name, double dx, double dy, double dz, std::ostringstream& stream);
         void trapezoid(std::string name, double dx, double dxx, double dy, double dyy, double dz, std::ostringstream& stream);
         void tubs(std::string name, double rmin, double rmax, double dz, std::ostringstream& stream);
+	void cone(std::string name, double rmin1, double rmax1, double rmin2, double rmax2, double dz, std::ostringstream& stream);
         void polycone(std::string name, std::vector<std::pair<double, double> >& rzu,
                                std::vector<std::pair<double, double> >& rzd, std::ostringstream& stream);
+	void shapesUnion(std::string name, std::string rSolid1, std::string rSolid2, std::ostringstream& stream);
+	void shapesIntersection(std::string name, std::string rSolid1, std::string rSolid2, std::ostringstream& stream);
         void posPart(std::string parent, std::string child, std::string rotref, Translation& trans, int copy, std::ostringstream& stream);
         void rotation(std::string name, double thetax, double phix, double thetay, double phiy,
                                                           double thetaz, double phiz, std::ostringstream& stream);
@@ -74,7 +75,7 @@ namespace insur {
         int findNumericPrefixSize(std::string s);
         int findEntry(std::vector<SpecParInfo>& specs, std::string name);
         std::vector<PathInfo>::iterator findEntry(std::string name, std::vector<PathInfo>& data);
-        std::string extendedHeader_, simpleHeader_; // headers containing generation information which are inserted after the preamble
+	std::string  simpleHeader_; // header containing generation information which is inserted after the preamble
     };
 }
 #endif	/* _XMLWRITER_H */
