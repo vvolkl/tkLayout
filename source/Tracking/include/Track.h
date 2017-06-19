@@ -200,7 +200,7 @@ public:
   const std::set<std::string>& getTags() const { return m_tags; }
 
   //! Get a vector of pairs: Detector module & hit type for Trigger hits
-  std::vector<std::pair<const DetectorModule*, HitType>> getHitModules() const;
+  std::vector<std::pair<const DetectorModule*, HitModuleType>> getHitModules() const;
 
 //  void addEfficiency(double efficiency, bool alsoPixel = false);
 //  void keepTriggerOnly();
@@ -267,7 +267,6 @@ protected:
   bool   m_covRZDone;         //!< Caching whether errors in R-Z already calculated (will be recalculated, if direction of propagation changed, or added new hit etc.)
   bool   m_refPointRPosCache; //!< Caching the last r position of ref. point, which was used to calculate track errors (if changed -> recalculate track parameters).
   bool   m_propagOutInCache;  //!< Caching the last used propagator direction (if changed -> recalculate track parameters).
-
 
   HitCollection         m_hits;         //!< Hits assigned to track
   std::set<std::string> m_tags;         //!< Which subdetectors to be used in tracking (each subdetector is tagged by a set of tags, e.g. pixel, fwd, tracker -> used in tracking of pixels, fwd tracking & full tracker)

@@ -48,7 +48,7 @@ public:
   Hit(double rPos, double zPos, const InactiveElement* myPassiveElem, HitPassiveType passiveHitType);
 
   //! Constructor for a hit on a given module at [rPos, zPos] (cylindrical position) from the origin
-  Hit(double rPos, double zPos, const DetectorModule* myModule, HitType activeHitType);
+  Hit(double rPos, double zPos, const DetectorModule* myModule, HitModuleType hitModuleType);
 
   //! Destructor
   ~Hit();
@@ -60,13 +60,13 @@ public:
   static bool sortHigherR(const HitPtr& h1, const HitPtr& h2);
 
   // Setter methods
-  void setTrack(const Track* newTrack)            { m_track = newTrack;};
+  void setTrack(const Track* newTrack)               { m_track = newTrack;};
 
-  void setAsActive()                              { m_activity = HitActivity::Active;};
-  void setAsPassive()                             { m_activity = HitActivity::Inactive;};
-  void setAsPixel()                               { m_isPixel    = true;}
-  void setActiveHitType(HitType activeHitType)    { m_activeHitType = activeHitType; }
-  void setCorrectedMaterial(RILength newMaterial) { m_correctedMaterial = newMaterial;};
+  void setAsActive()                                 { m_activity = HitActivity::Active;};
+  void setAsPassive()                                { m_activity = HitActivity::Inactive;};
+  void setAsPixel()                                  { m_isPixel  = true;}
+  void setHitModuleType(HitModuleType hitModuleType) { m_hitModuleType = hitModuleType; }
+  void setCorrectedMaterial(RILength newMaterial)    { m_correctedMaterial = newMaterial;};
 
   void setTrigger(bool isTrigger)                 { m_isTrigger = isTrigger;}
   void setResolutionRphi(double newRes)           { m_resolutionRPhi = newRes; } // Only used for virtual hits on non-modules
@@ -81,14 +81,14 @@ public:
   const DetectorModule*  getHitModule() const         { return m_hitModule; };
   const InactiveElement* getHitPassiveElement() const { return m_hitPassiveElem; }
 
-  double   getDistance() const         { return m_distance;};
-  double   getRPos() const             { return m_rPos;};
-  double   getZPos() const             { return m_zPos;};
-  double   getTilt() const             { if (this->isMeasurable()) return m_hitModule->tiltAngle(); else return 0; };
-  bool     isActive() const            { if (m_activity==HitActivity::Active)   return true; else return false;};
-  bool     isPassive() const           { if (m_activity==HitActivity::Inactive) return true; else return false;};
-  bool     isActivityUndefined() const { if (m_activity==HitActivity::Undefined) return true; else return false;};
-  HitType  getActiveHitType() const    { return m_activeHitType; } // NONE, INNER, OUTER, BOTH or STUB -- only meaningful for hits on active elements
+  double        getDistance() const         { return m_distance;};
+  double        getRPos() const             { return m_rPos;};
+  double        getZPos() const             { return m_zPos;};
+  double        getTilt() const             { if (this->isMeasurable()) return m_hitModule->tiltAngle(); else return 0; };
+  bool          isActive() const            { if (m_activity==HitActivity::Active) return true; else return false;};
+  bool          isPassive() const           { if (m_activity==HitActivity::Inactive) return true; else return false;};
+  bool          isActivityUndefined() const { if (m_activity==HitActivity::Undefined) return true; else return false;};
+  HitModuleType getHitModuleType() const    { return m_hitModuleType; } // NONE, INNER, OUTER, BOTH or STUB -- only meaningful for hits on active elements
   RILength getCorrectedMaterial();
   double   getResolutionRphi(double trackRadius);
   double   getResolutionZ(double trackRadius);
@@ -126,7 +126,7 @@ protected:
   double         m_rPos;          //!< Distance of hit from origin in the x/y plane (cylindrical coordinates -> r)
   double         m_zPos;          //!< Distance of hit from origin in z (cylindrical coordinates -> z)
   HitActivity    m_activity;      //!< Hit defined as pure material (inactive) or measurement point (active)
-  HitType        m_activeHitType; //!< Hit coming from inner, outer, stub, ... module
+  HitModuleType  m_hitModuleType; //!< Hit coming from inner, outer, stub, ... module
   HitPassiveType m_passiveHitType;//!< Hit coming from which passive part: beam-pipe, service, support etc.
   
   const DetectorModule*  m_hitModule;     //!< Const pointer to the hit module

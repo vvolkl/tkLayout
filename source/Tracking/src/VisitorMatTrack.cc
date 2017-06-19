@@ -145,18 +145,18 @@ void VisitorMatTrack::analyzeModuleMB(const DetectorModule& m)
   // Collision detection: material tracks being shot in z+ only, so consider only modules that lie on +Z side after correction on primary vertex origin
   if ((m.maxZ()-m_matTrack.getOrigin().Z())>0) {
 
-    XYZVector direction(m_matTrack.getDirection());
-    Material  hitMaterial;
-    XYZVector hitPosition;
-    HitType   hitType;
+    XYZVector     direction(m_matTrack.getDirection());
+    Material      hitMaterial;
+    XYZVector     hitPosition;
+    HitModuleType hitModuleType;
 
-    if (m.checkTrackHits(m_matTrack.getOrigin(), direction, hitMaterial, hitType, hitPosition)) {
+    if (m.checkTrackHits(m_matTrack.getOrigin(), direction, hitMaterial, hitModuleType, hitPosition)) {
 
       auto hitRPos = hitPosition.rho();
       auto hitZPos = hitPosition.z();
 
       // Create Hit object with appropriate parameters, add to Track t
-      HitPtr hit(new Hit(hitRPos, hitZPos, &m, hitType));
+      HitPtr hit(new Hit(hitRPos, hitZPos, &m, hitModuleType));
       hit->setCorrectedMaterial(hitMaterial);
       if (m.subdet() == BARREL) {
         hit->setDetName(m_detName+"_"+m_brlName);

@@ -699,7 +699,7 @@ void Track::printHits() const {
     if (it->getLayerOrDiscID()!=-1) std::cout << " " << it->getDetName() << " L/D_id= " << it->getLayerOrDiscID();
 
     if (it->isActive()) {
-      std::cout << " activeHitType_=" << static_cast<short>(it->getActiveHitType());
+      std::cout << " hitModuleType_=" << static_cast<short>(it->getHitModuleType());
     }
     std::cout << std::endl;
   }
@@ -729,7 +729,7 @@ void Track::printActiveHits() const {
       if (it->isBeamPipe()) std::cout << " beam-pipe";
       if (it->isIP())       std::cout << " ip";
       if (it->getLayerOrDiscID()!=-1) std::cout << " " << it->getDetName() << " L/D_id= " << it->getLayerOrDiscID();
-      std::cout << " activeHitType_=" << static_cast<short>(it->getActiveHitType());
+      std::cout << " hitModuleType_=" << static_cast<short>(it->getHitModuleType());
       std::cout << std::endl;
     }
   }
@@ -967,9 +967,9 @@ RILength Track::getMaterial() const {
 //
 // Get a vector of pairs: Detector module & hit type for Trigger hits
 //
-std::vector<std::pair<const DetectorModule*, HitType>> Track::getHitModules() const {
+std::vector<std::pair<const DetectorModule*, HitModuleType>> Track::getHitModules() const {
 
-  std::vector<std::pair<const DetectorModule*, HitType>> result;
+  std::vector<std::pair<const DetectorModule*, HitModuleType>> result;
 
   for (auto& iHit : m_hits) {
 
@@ -978,7 +978,7 @@ std::vector<std::pair<const DetectorModule*, HitType>> Track::getHitModules() co
       // We've got a possible trigger here
       // Let's find the corresponding module
       const DetectorModule* myModule = iHit->getHitModule();
-      if (myModule) result.push_back(std::make_pair(myModule, iHit->getActiveHitType()));
+      if (myModule) result.push_back(std::make_pair(myModule, iHit->getHitModuleType()));
       else {
         // Whoops: problem here: an active hit is not linked to any module
         logERROR("Track::getHitModules: This SHOULD NOT happen. In expectedTriggerPoints() an active hit does not correspond to any module!");

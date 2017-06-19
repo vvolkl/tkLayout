@@ -56,7 +56,7 @@ Hit::Hit() {
     m_rPos             = 0;
     m_zPos             = 0;
     m_activity         = HitActivity::Undefined;
-    m_activeHitType    = HitType::NONE;
+    m_hitModuleType    = HitModuleType::NONE;
     m_hitModule        = nullptr;
     m_track            = nullptr;
     m_isTrigger        = false;
@@ -79,7 +79,7 @@ Hit::Hit(const Hit& h) {
     m_rPos              = h.m_rPos;
     m_zPos              = h.m_zPos;
     m_activity          = h.m_activity;
-    m_activeHitType     = h.m_activeHitType;
+    m_hitModuleType     = h.m_hitModuleType;
     m_hitModule         = h.m_hitModule;
     m_track             = nullptr;
     m_correctedMaterial = h.m_correctedMaterial;
@@ -102,7 +102,7 @@ Hit::Hit(double rPos, double zPos, const InactiveElement* myPassiveElem, HitPass
     m_rPos              = rPos;
     m_zPos              = zPos;
     m_activity          = HitActivity::Inactive;
-    m_activeHitType     = HitType::NONE;
+    m_hitModuleType     = HitModuleType::NONE;
     m_hitModule         = nullptr;
     m_track             = nullptr;
     m_isTrigger         = false;
@@ -125,13 +125,13 @@ Hit::Hit(double rPos, double zPos, const InactiveElement* myPassiveElem, HitPass
  * //! Constructor for a hit on a given module at [rPos, zPos] (cylindrical position) from the origin
  * @param myModule pointer to the module with the hit 
  */
-Hit::Hit(double rPos, double zPos, const DetectorModule* myModule, HitType activeHitType) {
+Hit::Hit(double rPos, double zPos, const DetectorModule* myModule, HitModuleType hitModuleType) {
     m_detName          = "Undefined";
     m_distance         = sqrt(rPos*rPos + zPos*zPos);
     m_rPos             = rPos;
     m_zPos             = zPos;
     m_activity         = HitActivity::Active;
-    m_activeHitType    = activeHitType;
+    m_hitModuleType    = hitModuleType;
     setHitModule(myModule);
     m_track            = nullptr;
     m_isTrigger        = false;
@@ -306,7 +306,7 @@ bool Hit::isSquareEndcap() {
 
 bool Hit::isStub() const
 {
-  return m_activeHitType == HitType::STUB;
+  return m_hitModuleType == HitModuleType::STUB;
 }
 
 /*

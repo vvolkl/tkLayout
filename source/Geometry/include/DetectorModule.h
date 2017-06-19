@@ -22,7 +22,7 @@ enum SensorLayout      { NOSENSORS, MONO, PT, STEREO };
 enum ZCorrelation      { SAMESEGMENT, MULTISEGMENT };
 enum ReadoutType       { READOUT_STRIP, READOUT_PIXEL, READOUT_PT };
 enum ReadoutMode       { BINARY, CLUSTER };
-enum HitType           { NONE, INNER, OUTER, BOTH = 3, STUB = 7 };
+enum HitModuleType     { NONE, INNER, OUTER, BOTH = 3, STUB = 7 };
 
 // Typedefs
 typedef PtrVector<BarrelModule> BarrelModules;
@@ -99,7 +99,7 @@ public:
   bool couldHit(const XYZVector& direction, double zError) const;
 
   //! Check if track hit the module -> if yes, return true with passed material, hit position vector & hitType (which module sensor(s) was/were hit)
-  bool checkTrackHits(const XYZVector& trackOrig, const XYZVector& trackDir, Material& hitMaterial, HitType& hitType, XYZVector& hitPos) const;
+  bool checkTrackHits(const XYZVector& trackOrig, const XYZVector& trackDir, Material& hitMaterial, HitModuleType& hitModuleType, XYZVector& hitPos) const;
 
   //! Calculate min & max module eta coverage taking into account error on beam Z position
   std::pair<double, double> minMaxEtaWithError(double zError) const;

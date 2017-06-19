@@ -248,7 +248,7 @@ bool AnalyzerGeometry::analyze()
       auto origin = ROOT::Math::XYZVector(0, 0, zPos);
 
       // Check whether generated track hits a module -> collect the list of hit modules
-      std::vector<std::pair<DetectorModule*, HitType>> hitModules;
+      std::vector<std::pair<DetectorModule*, HitModuleType>> hitModules;
 
       static const double zErrorSafetyMargin = 5. ; // track origin shift in units of zError to compute boundaries
 
@@ -261,12 +261,12 @@ bool AnalyzerGeometry::analyze()
         if (module->couldHit(direction, zErrorIP*zErrorSafetyMargin)) {
 
           // Get hit
-          XYZVector hitPos;
-          Material  hitMaterial;
-          HitType   hitType;
-          if (module->checkTrackHits(origin, direction, hitMaterial, hitType, hitPos)) {
+          XYZVector     hitPos;
+          Material      hitMaterial;
+          HitModuleType hitModuleType;
+          if (module->checkTrackHits(origin, direction, hitMaterial, hitModuleType, hitPos)) {
 
-            hitModules.push_back(std::make_pair(module,hitType));;
+            hitModules.push_back(std::make_pair(module,hitModuleType));;
           }
         }
       }
@@ -289,20 +289,20 @@ bool AnalyzerGeometry::analyze()
         auto modType = module.first->moduleType();
 
         // Inner
-        if (module.second & HitType::INNER) numHits++;
+        if (module.second & HitModuleType::INNER) numHits++;
 
         // Outer
-        if (module.second & HitType::OUTER) numHits++;
+        if (module.second & HitModuleType::OUTER) numHits++;
 
         // Stubs
-        if (module.second == HitType::STUB) {
+        if (module.second == HitModuleType::STUB) {
 
           typedNumStubs[modType]++;
           numStubs++;
         }
 
         // Count module hits for given type
-        if ((module.second & HitType::INNER) || (module.second & HitType::OUTER)) typedNumHits[modType]++;
+        if ((module.second & HitModuleType::INNER) || (module.second & HitModuleType::OUTER)) typedNumHits[modType]++;
       }
 
       // Fill plots
@@ -329,7 +329,7 @@ bool AnalyzerGeometry::analyze()
           if (layerName == (uniref.cnt + "_" + any2str(uniref.layer))) {
 
             layerHit = 1;
-            if (module.second == HitType::STUB) layerStub=1;
+            if (module.second == HitModuleType::STUB) layerStub=1;
 
             // In maximum one hit needed to calculate coverage (i.e efficiency)
             if (layerHit && layerStub) break;
