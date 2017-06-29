@@ -95,8 +95,8 @@ bool ExtractorFCCSW::analyze()
   detNames2IDs.insert(std::make_pair("OuterECAPneg", "EndCapTrackerOuter_id + 16"));
   detNames2IDs.insert(std::make_pair("FwdECAPpos", "27"));
   detNames2IDs.insert(std::make_pair("FwdECAPneg", "28"));
-  detNames2IDs.insert(std::make_pair("FwdHelpECAPpos", "29"));
-  detNames2IDs.insert(std::make_pair("FwdHelpECAPneg", "30"));
+  detNames2IDs.insert(std::make_pair("FwdIECAPpos", "29"));
+  detNames2IDs.insert(std::make_pair("FwdIECAPneg", "30"));
 
   // Save XML file
   std::string xmlDocBaseName = SimParms::getInstance().getWebDir();
@@ -124,7 +124,7 @@ bool ExtractorFCCSW::analyze()
   xmlDetBrlReadout->InsertEndChild(xmlDetBrlSeg);
 
   auto xmlDetBrlId = m_xmlDoc->NewElement("id");
-  xmlDetBrlId->SetText("system:5,layer:5,module:16,component:4,x:-15,z:-15");
+  xmlDetBrlId->SetText("system:5,layer:5,module:18,x:-15,z:-15");
   xmlDetBrlReadout->InsertEndChild(xmlDetBrlId);
 
   // Ecap read-out
@@ -139,7 +139,7 @@ bool ExtractorFCCSW::analyze()
   xmlDetEcapReadout->InsertEndChild(xmlDetEcapSeg);
 
   auto xmlDetEcapId = m_xmlDoc->NewElement("id");
-  xmlDetEcapId->SetText("system:5,disc:5,module:16,component:4,x:-15,z:-15");
+  xmlDetEcapId->SetText("system:5,layer:5,module:18,x:-15,z:-15");
   xmlDetEcapReadout->InsertEndChild(xmlDetEcapId);
 
 
@@ -527,6 +527,8 @@ bool ExtractorFCCSW::analyze()
           xmlEcapIthDisc->SetAttribute("z",        printWithUnit(iDisc.averageZ(),   c_precision, "mm").c_str());
           xmlEcapIthDisc->SetAttribute("zmin",     printWithUnit(iDisc.minZAllMat(), c_precision, "mm").c_str());
           xmlEcapIthDisc->SetAttribute("zmax",     printWithUnit(iDisc.maxZAllMat(), c_precision, "mm").c_str());
+          xmlEcapIthDisc->SetAttribute("rmin",     printWithUnit(iDisc.minR(), c_precision, "mm").c_str());
+          xmlEcapIthDisc->SetAttribute("rmax",     printWithUnit(iDisc.maxR(), c_precision, "mm").c_str());
           xmlEcapIthDisc->SetAttribute("bigDelta", printWithUnit(iDisc.bigDelta(),   c_precision, "mm").c_str());
           xmlEcapDiscs->InsertEndChild(xmlEcapIthDisc);
 
@@ -549,7 +551,9 @@ bool ExtractorFCCSW::analyze()
             }
 
             // Discs are symmetrically shifted - fill only the first disc
-            if (iDisc.myid()==1) {
+            // except for the Inner forward ecap -- this is a hack because it is treated
+            // differently in the constructor. Here we want to output all info for all discs
+            if (iDisc.myid()==1 || (ecapName.find("IECAP") != std::string::npos))  {
               auto xmlEcapRing = m_xmlDefinitionsDoc->NewElement("ring");
               xmlEcapRing->SetAttribute("id",       iRing.myid());
               xmlEcapRing->SetAttribute("phi0",     printWithUnit(iRing.zRotation(),2*c_precision, "rad").c_str());
