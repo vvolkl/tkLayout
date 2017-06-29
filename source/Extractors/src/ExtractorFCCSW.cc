@@ -95,8 +95,8 @@ bool ExtractorFCCSW::analyze()
   detNames2IDs.insert(std::make_pair("OuterECAPneg", "EndCapTrackerOuter_id + 16"));
   detNames2IDs.insert(std::make_pair("FwdECAPpos", "27"));
   detNames2IDs.insert(std::make_pair("FwdECAPneg", "28"));
-  detNames2IDs.insert(std::make_pair("FwdHelpECAPpos", "29"));
-  detNames2IDs.insert(std::make_pair("FwdHelpECAPneg", "30"));
+  detNames2IDs.insert(std::make_pair("FwdIECAPpos", "29"));
+  detNames2IDs.insert(std::make_pair("FwdIECAPneg", "30"));
 
   // Save XML file
   std::string xmlDocBaseName = SimParms::getInstance().getWebDir();
