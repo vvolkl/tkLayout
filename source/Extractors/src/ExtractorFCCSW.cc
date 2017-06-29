@@ -527,6 +527,8 @@ bool ExtractorFCCSW::analyze()
           xmlEcapIthDisc->SetAttribute("z",        printWithUnit(iDisc.averageZ(),   c_precision, "mm").c_str());
           xmlEcapIthDisc->SetAttribute("zmin",     printWithUnit(iDisc.minZAllMat(), c_precision, "mm").c_str());
           xmlEcapIthDisc->SetAttribute("zmax",     printWithUnit(iDisc.maxZAllMat(), c_precision, "mm").c_str());
+          xmlEcapIthDisc->SetAttribute("rmin",     printWithUnit(iDisc.minR(), c_precision, "mm").c_str());
+          xmlEcapIthDisc->SetAttribute("rmax",     printWithUnit(iDisc.maxR(), c_precision, "mm").c_str());
           xmlEcapIthDisc->SetAttribute("bigDelta", printWithUnit(iDisc.bigDelta(),   c_precision, "mm").c_str());
           xmlEcapDiscs->InsertEndChild(xmlEcapIthDisc);
 
