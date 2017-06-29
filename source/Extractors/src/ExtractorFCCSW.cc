@@ -549,7 +549,9 @@ bool ExtractorFCCSW::analyze()
             }
 
             // Discs are symmetrically shifted - fill only the first disc
-            if (iDisc.myid()==1) {
+            // except for the Inner forward ecap -- this is a hack because it is treated
+            // differently in the constructor. Here we want to output all info for all discs
+            if (iDisc.myid()==1 || (ecapName.find("IECAP") != std::string::npos))  {
               auto xmlEcapRing = m_xmlDefinitionsDoc->NewElement("ring");
               xmlEcapRing->SetAttribute("id",       iRing.myid());
               xmlEcapRing->SetAttribute("phi0",     printWithUnit(iRing.zRotation(),2*c_precision, "rad").c_str());
