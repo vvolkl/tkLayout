@@ -124,7 +124,7 @@ bool ExtractorFCCSW::analyze()
   xmlDetBrlReadout->InsertEndChild(xmlDetBrlSeg);
 
   auto xmlDetBrlId = m_xmlDoc->NewElement("id");
-  xmlDetBrlId->SetText("system:5,layer:5,module:16,component:4,x:-15,z:-15");
+  xmlDetBrlId->SetText("system:5,layer:5,module:18,x:-15,z:-15");
   xmlDetBrlReadout->InsertEndChild(xmlDetBrlId);
 
   // Ecap read-out
@@ -139,7 +139,7 @@ bool ExtractorFCCSW::analyze()
   xmlDetEcapReadout->InsertEndChild(xmlDetEcapSeg);
 
   auto xmlDetEcapId = m_xmlDoc->NewElement("id");
-  xmlDetEcapId->SetText("system:5,disc:5,module:16,component:4,x:-15,z:-15");
+  xmlDetEcapId->SetText("system:5,layer:5,module:18,x:-15,z:-15");
   xmlDetEcapReadout->InsertEndChild(xmlDetEcapId);
 
 
