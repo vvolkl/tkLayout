@@ -415,6 +415,59 @@ double Track::getDeltaZ(double refPointRPos, bool propagOutIn/*=true*/) {
 }
 
 //
+// Get DeltaT0 at refPoint [rPos, zPos] ([0,0]) combining all time-stamps along the track. Use track path length, defined as
+// difference between time layer and ref. point to calculated the time of flight correction factor to individual time measurements.
+//
+double Track::getDeltaT(double refPointRPos) {
+
+  double       deltaT = 0;
+
+  for (auto& iHit : m_timeHits) {
+
+    double radius    = getRadius(iHit->getZPos());
+    double deltaR    = iHit->getRPos() - refPointRPos;
+    double deltaZ    = iHit->getZPos() - refPointRPos*getCotgTheta();
+    double sinTheta  = sin(this->getTheta());
+    double cotgTheta = m_cotgTheta;
+    double cosTilt   = cos(iHit->getTilt());
+    double sinTilt   = sin(iHit->getTilt());
+
+    double sinPhiHalf    = iHit->getRPos()/2./radius;
+    double sinPhiHalfRef = refPointRPos/2./radius;
+    double cosPhiHalf    = sqrt(1-sinPhiHalf*sinPhiHalf);
+    double deltaPhi      = asin(sinPhiHalf)*2 - asin(sinPhiHalfRef)*2;
+    double pathLength    = radius*deltaPhi/sin(m_theta);
+
+    double sigmaT         = iHit->getTimeResolution();
+    double sigmaLocRPhiDet= iHit->getLocalRPhiResolution();
+    double sigmaLocZDet   = iHit->getLocalZResolution();
+    double sigmaPhiRef    = getDeltaPhi(refPointRPos);
+    double sigmaZRef      = getDeltaZ(refPointRPos);
+
+    double sigmaTRefSq = -1;
+    if (sigmaT!=-1 && sigmaLocRPhiDet!=-1 && sigmaLocZDet!=-1 && sigmaPhiRef!=-1) {
+
+      sigmaTRefSq = pow( (deltaZ*cosTilt - radius*deltaPhi*cosPhiHalf*sinTilt) * sigmaLocZDet,2);
+      sigmaTRefSq+= pow( (deltaZ) * sigmaZRef,2);
+      sigmaTRefSq+= pow( (radius*deltaPhi*sinPhiHalf) *sigmaLocRPhiDet,2);
+      sigmaTRefSq+= pow( (radius*radius*deltaPhi) * sigmaPhiRef,2);
+
+      sigmaTRefSq*= 1/Units::c/Units::c/pathLength/pathLength;
+      sigmaTRefSq += sigmaT*sigmaT;
+
+      // Do weighted average sigmaTot = sqrt[ 1/(Sum_i 1/sigma_i^2) ]
+      deltaT   += 1/sigmaTRefSq;
+    }
+  }
+
+  // Get final sigma from weighted average
+  if (deltaT>=0) deltaT = sqrt(1./deltaT);
+  else           deltaT = -1;
+
+  return deltaT;
+}
+
+//
 // Get DeltaCTau for secondary particles coming from the primary vertex at ~ [0,0] -> an important quantity to estimate the
 // resolution of secondary vertices
 //
@@ -443,8 +496,20 @@ void Track::addHit(HitPtr newHit) {
   }
   newHit->setTrack(this);
 
-  // Add new hit if it follows the parabolic approximation -> hits practically found at high pT limit, so in reality don't have to lie on the track
-  if (followsParabolicApprox(newHit->getRPos(), newHit->getZPos())) m_hits.push_back(std::move(newHit));
+  // Check that radial pos of new hit below track curling radius
+  if (isHitRPosLowerThanCurlingRadius(newHit->getRPos(), newHit->getZPos())) {
+
+    // Clone hit for timing information
+    if (newHit->isTimeMeasured()) {
+
+      HitPtr cloneHit(new Hit(*newHit));
+      m_timeHits.push_back(std::move(cloneHit));
+    }
+
+    // Save position hit into hits
+    m_hits.push_back(std::move(newHit));
+
+  }
   else newHit.reset(nullptr);
 
   // Hits need to be re-sorted & cov. matrices recalculated
@@ -472,8 +537,8 @@ void Track::addIPConstraint(double dr, double dz) {
   newHit->setResolutionRphi(dr);
   newHit->setResolutionZ(dz);
 
-  // Add new hit if it follows the parabolic approximation -> hits practically found at high pT limit, so in reality don't have to lie on the track
-  if (followsParabolicApprox(newHit->getRPos(), newHit->getZPos())) m_hits.push_back(std::move(newHit));
+  // Check that radial pos of new hit below track curling radius
+  if (isHitRPosLowerThanCurlingRadius(newHit->getRPos(), newHit->getZPos())) m_hits.push_back(std::move(newHit));
   else newHit.reset(nullptr);
 
   // Hits need to be re-sorted & cov. matrices recalculated
@@ -509,15 +574,17 @@ const Polar3DVector& Track::setThetaPhiPt(const double& newTheta, const double& 
 }
 
 //
-// Re-set transverse momentum + resort hits (if changing direction) + initiate recalc of cov matrices + prune hits (otherwise they may not lie on the new track, originally found at high pT limit)
+// Re-set transverse momentum (recalculate hit quantities dependent on track radius) + resort hits (if changing direction) +
+// initiate recalc of cov matrices + prune hits (otherwise they may not lie on the new track, originally found at high pT limit)
 void Track::resetPt(double newPt) {
 
   if (newPt*m_pt<0) m_reSortHits = true;
   m_covRPhiDone = false;
   m_covRZDone   = false;
 
+  // Set pt, recalculate track radius related hit quantities & prune hits
   m_pt = newPt;
-
+  for (auto& iHit : m_hits) { iHit->setTrack(this); }
   pruneHits();
 }
 
@@ -536,7 +603,8 @@ bool Track::pruneHits() {
   HitCollection newHits;
   for (auto& iHit : m_hits) {
 
-    if (followsParabolicApprox(iHit->getRPos(),iHit->getZPos())) newHits.push_back(std::move(iHit));
+    // Check that radial pos of new hit below track curling radius
+    if (isHitRPosLowerThanCurlingRadius(iHit->getRPos(),iHit->getZPos())) newHits.push_back(std::move(iHit));
     else {
 
       // Clear memory
@@ -683,9 +751,9 @@ void Track::printHits() const {
 
   for (const auto& it : m_hits) {
     std::cout << "    Hit";
-    if (it->isActive())   std::cout << " r="  << it->getRPos() << " +- " << it->getResolutionRphi(getRadius(it->getZPos()));
+    if (it->isActive())   std::cout << " r="  << it->getRPos() << " +- " << it->getRphiResolution(getRadius(it->getZPos()));
     else                  std::cout << " r="  << it->getRPos();
-    if (it->isActive())   std::cout << " z="  << it->getZPos() << " +- " << it->getResolutionZ(getRadius(it->getZPos()));
+    if (it->isActive())   std::cout << " z="  << it->getZPos() << " +- " << it->getZResolution(getRadius(it->getZPos()));
     else                  std::cout << " z="  << it->getZPos();
     std::cout << " d="  << it->getDistance()
               << " rl=" << it->getCorrectedMaterial().radiation
@@ -717,8 +785,8 @@ void Track::printActiveHits() const {
     if (it->isActive()) {
 
       std::cout << "    Hit";
-      std::cout << " r="  << it->getRPos() << " +- " << it->getResolutionRphi(getRadius(it->getZPos()));
-      std::cout << " z="  << it->getZPos() << " +- " << it->getResolutionZ(getRadius(it->getZPos()));
+      std::cout << " r="  << it->getRPos() << " +- " << it->getRphiResolution(getRadius(it->getZPos()));
+      std::cout << " z="  << it->getZPos() << " +- " << it->getZResolution(getRadius(it->getZPos()));
       std::cout << " d="  << it->getDistance()
                 << " rl=" << it->getCorrectedMaterial().radiation
                 << " il=" << it->getCorrectedMaterial().interaction;
@@ -1055,13 +1123,13 @@ bool Track::computeCovarianceMatrixRPhi(double refPointRPos, bool propagOutIn) {
     return false;
   }
 
-  // Get contributions from Multiple Couloumb scattering
-  std::vector<double> msThetaOverSinSq;
+  // Pre-compute the squares of the scattering angles projected to the virtual measurement plane
+  std::vector<double> msThetaSqProj;
 
   for (int i=iStart; i<iEnd; i++) {
 
     // MS theta
-    double msTheta = 0.0;
+    double msThetaSq = 0.0;
 
     // Material in terms of rad. lengths
     double XtoX0 = m_hits.at(i)->getCorrectedMaterial().radiation;
@@ -1071,23 +1139,25 @@ bool Track::computeCovarianceMatrixRPhi(double refPointRPos, bool propagOutIn) {
 
       // MS error depends on path length = deltaR/sin(theta), so one can precalculate msTheta_real as msTheta/sin^2(theta), which practically means using pT
       // instead of p & then one has to multiply the msTheta by deltaR to get MS error
-      msTheta = (13.6*Units::MeV * 13.6*Units::MeV) / (m_pt/Units::MeV * m_pt/Units::MeV) * XtoX0 * (1 + 0.038 * log(XtoX0)) * (1 + 0.038 * log(XtoX0));
+      msThetaSq = (13.6*Units::MeV * 13.6*Units::MeV) / (m_pt/Units::MeV * m_pt/Units::MeV) * XtoX0 * (1 + 0.038 * log(XtoX0)) * (1 + 0.038 * log(XtoX0));
 
       // Take into account a propagation of MS error on virtual barrel plane, on which all measurements are evaluated for consistency (global chi2 fit applied) ->
       // in limit R->inf. propagation along line used, otherwise a very small correction factor coming from the circular shape of particle track is required (similar
       // approach as for local resolutions)
       // TODO: Currently, correction mathematicaly derived only for use case of const magnetic field -> more complex mathematical expression expected in non-const B field
       // (hence correction not applied in such case)
-      double A = 0;
-      if (SimParms::getInstance().isMagFieldConst()) A = m_hits.at(i)->getRPos()/2./getRadius(m_hits.at(i)->getZPos());     // r_i/2R
-      double corrFactor = 1 + A*A*cos(m_theta)*cos(m_theta)/(1-A*A);
+      //double A = 0;
+      //if (SimParms::getInstance().isMagFieldConst()) A = m_hits.at(i)->getRPos()/2./getRadius(m_hits.at(i)->getZPos());     // r_i/2R
+      //double corrFactor = 1 + A*A*cos(m_theta)*cos(m_theta)/(1-A*A);
+      double corrFactor = 1;
+      if (!SimParms::getInstance().useParabolicApprox()) corrFactor = 1./m_hits.at(i)->getCosPhiHalf(); // Correction to material budget crossed by in r-phi curving low momentum particle
 
-      msTheta *= corrFactor;
+      msThetaSq *= corrFactor;
     }
     else {
-      msTheta = 0;
+      msThetaSq = 0;
     }
-    msThetaOverSinSq.push_back(msTheta);
+    msThetaSqProj.push_back(msThetaSq);
   }
 
   //
@@ -1112,14 +1182,16 @@ bool Track::computeCovarianceMatrixRPhi(double refPointRPos, bool propagOutIn) {
 
           for (int i=iStart; i<r; i++) {
 
-            sum += msThetaOverSinSq.at(i-(nHits-nHitsUsed))
-                   * (m_hits.at(c)->getRPos() - m_hits.at(i)->getRPos())
-                   * (m_hits.at(r)->getRPos() - m_hits.at(i)->getRPos());
-
+            if (SimParms::getInstance().useParabolicApprox()) sum += msThetaSqProj.at(i-(nHits-nHitsUsed))
+                                                                  * (m_hits.at(c)->getRPos() - m_hits.at(i)->getRPos())
+                                                                  * (m_hits.at(r)->getRPos() - m_hits.at(i)->getRPos());
+            else                                              sum += msThetaSqProj.at(i-(nHits-nHitsUsed))
+                                                                  * (m_hits.at(c)->getRPhiLength() - m_hits.at(i)->getRPhiLength())
+                                                                  * (m_hits.at(r)->getRPhiLength() - m_hits.at(i)->getRPhiLength());
           }
           if (r == c) {
 
-            double prec = m_hits.at(r)->getResolutionRphi(getRadius(m_hits.at(r)->getZPos()));
+            double prec = m_hits.at(r)->getRphiResolution(getRadius(m_hits.at(r)->getZPos()));
             //std::cout << ">>> " << sqrt(sum) << " " << prec << std::endl;
             sum = sum + prec * prec;
 
@@ -1193,9 +1265,23 @@ bool Track::computeCovarianceMatrixRPhi(double refPointRPos, bool propagOutIn) {
   for (auto i=iStart; i<=iEnd; i++) {
 
     if (m_hits.at(i)->isActive()) {
-      diffs(i - offset, 0) = computeDfOverDRho(m_hits.at(i)->getRPos(),m_hits.at(i)->getZPos());
-      diffs(i - offset, 1) = +m_hits.at(i)->getRPos(); // No impact of sign on results, but from analytical derivation point of view correct with a plus sign!!! Was minus sign here!!!
-      diffs(i - offset, 2) = 1;
+
+      double hitRPos    = m_hits.at(i)->getRPos();
+      double hitZPos    = m_hits.at(i)->getZPos();
+
+      if (SimParms::getInstance().useParabolicApprox()) {
+
+        diffs(i - offset, 0) = computeDfOverDRho(hitRPos, hitZPos);
+        diffs(i - offset, 1) = m_hits.at(i)->getRPos(); // No impact of sign on results, but from analytical derivation point of view correct with a plus sign!!! Was minus sign here!!!
+        diffs(i - offset, 2) = 1;
+      }
+      else {
+
+        diffs(i - offset, 0) = computeDfOverDRho(hitRPos, hitZPos);
+        diffs(i - offset, 1) = m_hits.at(i)->getXPos(); // No impact of sign on results, but from analytical derivation point of view correct with a plus sign!!! Was minus sign here!!!
+        diffs(i - offset, 2) = 1;
+      }
+
     }
     else offset++;
   }
@@ -1285,40 +1371,38 @@ bool Track::computeCovarianceMatrixRZ(double refPointRPos, bool propagOutIn) {
     return false;
   }
 
-  // Pre-compute the squares of the scattering angles
-  // already divided by sin^2 (that is : we should use p instead of p_T here
-  // but the result for theta^2 differ by a factor 1/sin^2, which is exactly the
-  // needed factor to project the scattering angle on an horizontal surface
-  std::vector<double> msThetaOverSinSq;
+  // Pre-compute the squares of the scattering angles projected to the virtual measurement plane
+  std::vector<double> msThetaSqProj;
 
   for (int i=iStart; i<iEnd; i++) {
 
     // MS theta
-    double msTheta = 0.0;
+    double msThetaSq = 0.0;
 
     // Material in terms of rad. lengths
     double XtoX0 = m_hits.at(i)->getCorrectedMaterial().radiation;
 
     if (XtoX0>0) {
-      // MS error depends on path length = deltaR/sin(theta), so one can precalculate msTheta_real as msTheta/sin^2(theta), which practically means using pT
-      // instead of p & then one has to multiply the msTheta by deltaR to get MS error
-      msTheta = (13.6*Units::MeV * 13.6*Units::MeV) / (m_pt/Units::MeV * m_pt/Units::MeV) * XtoX0 * (1 + 0.038 * log(XtoX0)) * (1 + 0.038 * log(XtoX0));
+      // MS error depends on path length = R(phi-phi0)/sin(theta), so one can precalculate msTheta_real as msTheta/sin^2(theta), which practically means using pT
+      // instead of p & then one has to multiply the msTheta by R(phi-phi0) to get MS error
+      msThetaSq = (13.6*Units::MeV * 13.6*Units::MeV) / (m_pt/Units::MeV * m_pt/Units::MeV) * XtoX0 * (1 + 0.038 * log(XtoX0)) * (1 + 0.038 * log(XtoX0));
 
       // Take into account a propagation of MS error on virtual barrel plane, on which all measurements are evaluated for consistency (global chi2 fit applied) ->
       // in limit R->inf. propagation along line used, otherwise a very small correction factor coming from the circular shape of particle track is required (similar
       // approach as for local resolutions)
       // TODO: Currently, correction mathematicaly derived only for use case of const magnetic field -> more complex mathematical expression expected in non-const B field
       // (hence correction not applied in such case)
-      double A = 0;
-      if (SimParms::getInstance().isMagFieldConst()) A = m_hits.at(i)->getRPos()/2./getRadius(m_hits.at(i)->getZPos());  // r_i/2R
-      double corrFactor = pow( cos(m_theta)*cos(m_theta)/sin(m_theta)/sqrt(1-A*A) + sin(m_theta) ,2); // Without correction it would be 1/sin(theta)^2
+      //double A = 0;
+      //if (SimParms::getInstance().isMagFieldConst()) A = m_hits.at(i)->getRPos()/2./getRadius(m_hits.at(i)->getZPos());  // r_i/2R
+      //double corrFactor = pow( cos(m_theta)*cos(m_theta)/sin(m_theta)/sqrt(1-A*A) + sin(m_theta) ,2); // Without correction it would be 1/sin(theta)^2
+      double corrFactor = 1/sin(m_theta)/sin(m_theta); // Projection to the virtual measurement plane
 
-      msTheta *=corrFactor;
+      msThetaSq *=corrFactor;
     }
     else {
-      msTheta = 0;
+      msThetaSq = 0;
     }
-    msThetaOverSinSq.push_back(msTheta);
+    msThetaSqProj.push_back(msThetaSq);
   }
 
   //
@@ -1341,12 +1425,18 @@ bool Track::computeCovarianceMatrixRZ(double refPointRPos, bool propagOutIn) {
 
           double sum = 0.0;
 
-          for (int i=iStart; i<r; i++) sum += msThetaOverSinSq.at(i-(nHits-nHitsUsed))
-                                            * (m_hits.at(c)->getRPos() - m_hits.at(i)->getRPos())
-                                            * (m_hits.at(r)->getRPos() - m_hits.at(i)->getRPos());
+          for (int i=iStart; i<r; i++) {
+
+            if (SimParms::getInstance().useParabolicApprox()) sum += msThetaSqProj.at(i-(nHits-nHitsUsed))
+                                                                  * (m_hits.at(c)->getRPos() - m_hits.at(i)->getRPos())
+                                                                  * (m_hits.at(r)->getRPos() - m_hits.at(i)->getRPos());
+            else                                              sum += msThetaSqProj.at(i-(nHits-nHitsUsed))
+                                                                  * (m_hits.at(c)->getRPhiLength() - m_hits.at(i)->getRPhiLength())
+                                                                  * (m_hits.at(r)->getRPhiLength() - m_hits.at(i)->getRPhiLength());
+          }
 
           if (r == c) {
-            double prec = m_hits.at(r)->getResolutionZ(getRadius(m_hits.at(r)->getZPos()));
+            double prec = m_hits.at(r)->getZResolution(getRadius(m_hits.at(r)->getZPos()));
             sum = sum + prec * prec;
           }
 
@@ -1427,8 +1517,16 @@ bool Track::computeCovarianceMatrixRZ(double refPointRPos, bool propagOutIn) {
     if (m_hits.at(i)->isActive()) {
 
       // Partial derivatives for x = p[0] * y + p[1]
-      diffs(i - offset, 0) = m_hits.at(i)->getRPos();
-      diffs(i - offset, 1) = 1;
+      if (SimParms::getInstance().useParabolicApprox()) {
+
+        diffs(i - offset, 0) = m_hits.at(i)->getRPos();
+        diffs(i - offset, 1) = 1;
+      }
+      else {
+
+        diffs(i - offset, 0) = m_hits.at(i)->getRPhiLength();
+        diffs(i - offset, 1) = 1;
+      }
     }
     else offset++;
   }

@@ -153,6 +153,11 @@ public:
   double getDeltaZ(double refPointRPos, bool propagOutIn=true);
   double getDeltaZ0() { return getDeltaZ(0.0); }
 
+  //! Get DeltaT0 at refPoint [rPos, zPos] ([0,0]) combining all time-stamps along the track. Use track path length, defined as
+  //! difference between time layer and ref. point to calculated the time of flight correction factor to individual time measurements.
+  double getDeltaT(double refPointRPos);
+  double getDeltaT0() { return getDeltaT(0.0); }
+
   //! Get DeltaCTau for secondary particles coming from the primary vertex at ~ [0,0] -> an important quantity to estimate the
   //! resolution of secondary vertices
   double getDeltaCTau();
@@ -249,8 +254,9 @@ protected:
   //! Sort internally all hits assigned to this track -> sorting algorithm based on hit radius - by smaller radius sooner or vice-versa (inner-to-outer approach or vice-versa)
   void sortHits(bool bySmallerR);
 
-  //! Remove hits that don't follow the parabolic approximation used in tracking - TODO: still needs to be updated (not all approximations taken into account here)
-  bool followsParabolicApprox(double rPos, double zPos) { return rPos<2*getRadius(zPos); }
+  //! Remove hits, which would be at radius higher than curling radius (hits assumed to be found in line approach, which is valid if geometry has a cylindrical symmetry, but
+  //! then all hits above curling radius must be removed -> check that hits below curling radius
+  bool isHitRPosLowerThanCurlingRadius(double rPos, double zPos) { return rPos<2*getRadius(zPos); }
   bool pruneHits();
 
   double m_theta;             //!< Track shot at given theta & phi, i.e. theta at primary vertex
@@ -268,7 +274,8 @@ protected:
   bool   m_refPointRPosCache; //!< Caching the last r position of ref. point, which was used to calculate track errors (if changed -> recalculate track parameters).
   bool   m_propagOutInCache;  //!< Caching the last used propagator direction (if changed -> recalculate track parameters).
 
-  HitCollection         m_hits;         //!< Hits assigned to track
+  HitCollection         m_hits;         //!< Position hits assigned to track // TODO: Combine time & pos. hits into 1 vector
+  HitCollection         m_timeHits;     //!< Time stamps assigned to track
   std::set<std::string> m_tags;         //!< Which subdetectors to be used in tracking (each subdetector is tagged by a set of tags, e.g. pixel, fwd, tracker -> used in tracking of pixels, fwd tracking & full tracker)
 
   // Track parameters covariance matrices

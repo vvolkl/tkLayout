@@ -425,10 +425,10 @@ void OccupancyVisitor::visit(const Layer& layer) {
       m_layerSenNPixels[iLayer][iSensor] = nStrips*nSegments;
     }
     if (m_layerSenPixelArea[iLayer][iSensor]!=0) {
-      if (m_layerSenPixelArea[iLayer][iSensor]!=module.resolutionLocalX()*module.resolutionLocalY()*12) logWARNING("Occupancy studies - module types differ within a layer -> check the code, data rate will be wrong!");
+      if (m_layerSenPixelArea[iLayer][iSensor]!=module.resLocalRPhi()*module.resLocalZ()*12) logWARNING("Occupancy studies - module types differ within a layer -> check the code, data rate will be wrong!");
     }
     else {
-      m_layerSenPixelArea[iLayer][iSensor] = module.resolutionLocalX()*module.resolutionLocalY()*12;
+      m_layerSenPixelArea[iLayer][iSensor] = module.resLocalRPhi()*module.resLocalZ()*12;
     }
 
     iSensor++;
@@ -586,8 +586,8 @@ void OccupancyVisitor::visit(const EndcapModule& module) {
     if (m_ringSenNPixels[m_iRing][iSensor]!=0 && m_ringSenNPixels[m_iRing][iSensor]!=nStrips+nSegments && m_ringSenNPixels[m_iRing][iSensor]!=nStrips*nSegments) logWARNING("Occupancy studies - module types differ within a ring -> check the code, data rate will be wrong!");
     else m_ringSenNPixels[m_iRing][iSensor] = nStrips*nSegments;
 
-    if (m_ringSenPixelArea[m_iRing][iSensor]!=0 && m_ringSenPixelArea[m_iRing][iSensor]!=module.resolutionLocalX()*module.resolutionLocalY()*12) logWARNING("Occupancy studies - module types differ within a layer -> check the code, data rate will be wrong!");
-    else m_ringSenPixelArea[m_iRing][iSensor] = module.resolutionLocalX()*module.resolutionLocalY()*12;
+    if (m_ringSenPixelArea[m_iRing][iSensor]!=0 && m_ringSenPixelArea[m_iRing][iSensor]!=module.resLocalRPhi()*module.resLocalZ()*12) logWARNING("Occupancy studies - module types differ within a layer -> check the code, data rate will be wrong!");
+    else m_ringSenPixelArea[m_iRing][iSensor] = module.resLocalRPhi()*module.resLocalZ()*12;
 
     iSensor++;
 

@@ -18,6 +18,7 @@ using material::MaterialObject;
 
 // Enum definitions related to DetectorModule
 enum ModuleSubdetector { BARREL = 1, ENDCAP = 2 };
+enum MeasurementType   { POSITION, TIME, POSANDTIME };
 enum SensorLayout      { NOSENSORS, MONO, PT, STEREO };
 enum ZCorrelation      { SAMESEGMENT, MULTISEGMENT };
 enum ReadoutType       { READOUT_STRIP, READOUT_PIXEL, READOUT_PT };
@@ -210,16 +211,18 @@ public:
 
   PropertyVector<  string    , ','>           trackingTags;    //!< Tag module -> define in which group(s) of detectors it will be used for tracking
 
-  ReadonlyProperty<int         , AutoDefault> numSensors;      //!< Number of sensors built within detector module
-  ReadonlyProperty<double      , Default    > stereoRotation;  //!< Stereo rotation of Z versus R-Phi measurement to calculate resolution (used if non-zero)
-  ReadonlyProperty<double      , Computable > resolutionLocalX;//!< TODO: Resolution in RPhi direction (calculated or defined) -> rename to RPhi
-  ReadonlyProperty<double      , Computable > resolutionLocalY;//!< TODO: Resolution in Z direction (calculated or defined) -> rename to Z
-  ReadonlyProperty<SensorLayout, Default    > sensorLayout;
-  ReadonlyProperty<ZCorrelation, NoDefault  > zCorrelation;
-  ReadonlyProperty<ReadoutMode , Default    > readoutMode;     //!< Binary or analog (cluster) readout
-  ReadonlyProperty<ReadoutType , Default    > readoutType;     //!< Readout strips/pixels/pT (stubs
-  ReadonlyProperty<std::string , Default    > moduleType;
-  Property<        short       , Default    > plotColor;       //!< Color used to draw module in the final graphical plots
+  ReadonlyProperty<int            , AutoDefault> numSensors;      //!< Number of sensors built within detector module
+  ReadonlyProperty<double         , Default    > stereoRotation;  //!< Stereo rotation of Z versus R-Phi measurement to calculate resolution (used if non-zero)
+  ReadonlyProperty<double         , Computable > resLocalRPhi;    //!< Resolution in local RPhi direction (perpendicular to local Z): calculated or defined in [mm] -> rename to RPhi
+  ReadonlyProperty<double         , Computable > resLocalZ;       //!< Resolution in local Z direction (tilted by tiltAngle from global Z): calculated or defined in [mm]-> rename to Z
+  ReadonlyProperty<double         , Default    > resTime;         //!< Time resolution in [ps] if the module can measure time, otherwise zero
+  ReadonlyProperty<MeasurementType, Default    > measurementType; //!< Module measures position, time or both
+  ReadonlyProperty<SensorLayout   , Default    > sensorLayout;
+  ReadonlyProperty<ZCorrelation   , NoDefault  > zCorrelation;
+  ReadonlyProperty<ReadoutMode    , Default    > readoutMode;     //!< Binary or analog (cluster) readout
+  ReadonlyProperty<ReadoutType    , Default    > readoutType;     //!< Readout strips/pixels/pT (stubs
+  ReadonlyProperty<std::string    , Default    > moduleType;
+  Property<        short          , Default    > plotColor;       //!< Color used to draw module in the final graphical plots
 
   Property<int16_t, AutoDefault> side;
   

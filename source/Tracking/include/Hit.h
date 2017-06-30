@@ -25,6 +25,7 @@ typedef std::unique_ptr<Hit> HitPtr;
 typedef std::vector<HitPtr>  HitCollection;
 
 enum class HitActivity    : short { Undefined, Active, Inactive };               //!< Hit defined as pure material (inactive) or measurement point (active)
+enum class HitActiveType  : short { Undefined, Position, Time, PosAndTime };     //!< Hit may be coming from position and/or time measurement
 enum class HitPassiveType : short { Undefined, BeamPipe, IP, Service, Support }; //!< Hit defined as IP or pure material hit coming from: support, service, etc.
 
 /**
@@ -60,10 +61,13 @@ public:
   static bool sortHigherR(const HitPtr& h1, const HitPtr& h2);
 
   // Setter methods
-  void setTrack(const Track* newTrack)               { m_track = newTrack;};
+  void setTrack(const Track* newTrack);
 
   void setAsActive()                                 { m_activity = HitActivity::Active;};
   void setAsPassive()                                { m_activity = HitActivity::Inactive;};
+  void setAsTimeMeasurement()                        { m_activeHitType = HitActiveType::Time;};
+  void setAsPosMeasurement()                         { m_activeHitType = HitActiveType::Position;};
+  void setAsPosAndTimeMeasurement()                  { m_activeHitType = HitActiveType::PosAndTime;};
   void setAsPixel()                                  { m_isPixel  = true;}
   void setHitModuleType(HitModuleType hitModuleType) { m_hitModuleType = hitModuleType; }
   void setCorrectedMaterial(RILength newMaterial)    { m_correctedMaterial = newMaterial;};
@@ -82,16 +86,26 @@ public:
   const InactiveElement* getHitPassiveElement() const { return m_hitPassiveElem; }
 
   double        getDistance() const         { return m_distance;};
+  double        getXPos() const             { return m_xPos;};
+  double        getYPos() const             { return m_yPos;};
   double        getRPos() const             { return m_rPos;};
   double        getZPos() const             { return m_zPos;};
+  double        getRPhiLength() const       { return m_rPhiLength; }
+  double        getCosPhiHalf() const       { return m_C; }
+  double        getSLength()  const         { return m_sLength; }
   double        getTilt() const             { if (this->isMeasurable()) return m_hitModule->tiltAngle(); else return 0; };
   bool          isActive() const            { if (m_activity==HitActivity::Active) return true; else return false;};
   bool          isPassive() const           { if (m_activity==HitActivity::Inactive) return true; else return false;};
   bool          isActivityUndefined() const { if (m_activity==HitActivity::Undefined) return true; else return false;};
+  bool          isTimeMeasured() const      { if (m_activeHitType==HitActiveType::Time     || m_activeHitType==HitActiveType::PosAndTime) return true; else return false;};
+  bool          isPosMeasured() const       { if (m_activeHitType==HitActiveType::Position || m_activeHitType==HitActiveType::PosAndTime) return true; else return false;};
   HitModuleType getHitModuleType() const    { return m_hitModuleType; } // NONE, INNER, OUTER, BOTH or STUB -- only meaningful for hits on active elements
   RILength getCorrectedMaterial();
-  double   getResolutionRphi(double trackRadius);
-  double   getResolutionZ(double trackRadius);
+  double   getLocalRPhiResolution();              //!< Get hit resolution in R-Phi in local module coordinates
+  double   getRphiResolution(double trackRadius); //!< Get hit resolution in direction normal to tangent of track, i.e. in direction of curvature
+  double   getLocalZResolution();                 //!< Get hit resolution in Z in local module coordinates
+  double   getZResolution(double trackRadius);    //!< Get hit resolution in direction [n x t], i.e. perpendicular to tangent and normal (direction of curvature)
+  double   getTimeResolution();                   //!< Get hit resolution in time
   double   getD();
 
   std::string getDetName()       const { return m_detName; };
@@ -123,10 +137,18 @@ protected:
   void setHitPassiveElement(const InactiveElement* myPassiveElem);
 
   double         m_distance;      //!< Distance of hit from origin in 3D = sqrt(rPos*rPos + zPos*zPos)
+  double         m_xPos;          //!< Given track radius, distance of hit from origin in x
+  double         m_yPos;          //!< Given track radius, distance of hit from origin in y
   double         m_rPos;          //!< Distance of hit from origin in the x/y plane (cylindrical coordinates -> r)
   double         m_zPos;          //!< Distance of hit from origin in z (cylindrical coordinates -> z)
+  double         m_A;             //!< Given track radius: rPos/2R (sin[(phi-phi0)/2])
+  double         m_C;             //!< Given track radius: cos[(phi-phi0)/2]
+  double         m_phi;           //!< Given track radius: phi-phi0
+  double         m_sLength;       //!< Given track radius, R(phi-phi0)/sin(theta) -> track length
+  double         m_rPhiLength;    //!< Given track radius, arc length : R(phi-phi0)
   HitActivity    m_activity;      //!< Hit defined as pure material (inactive) or measurement point (active)
   HitModuleType  m_hitModuleType; //!< Hit coming from inner, outer, stub, ... module
+  HitActiveType  m_activeHitType; //!< Hit may be coming from position and/or time measurement
   HitPassiveType m_passiveHitType;//!< Hit coming from which passive part: beam-pipe, service, support etc.
   
   const DetectorModule*  m_hitModule;     //!< Const pointer to the hit module

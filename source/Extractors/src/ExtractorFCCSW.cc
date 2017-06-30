@@ -343,8 +343,8 @@ bool ExtractorFCCSW::analyze()
                 xmlBrlSensorProperties->SetAttribute("sensorLength"   , printWithUnit(iMod.length(),   c_precision, "mm").c_str());
                 xmlBrlSensorProperties->SetAttribute("sensorWidth"    , printWithUnit(iMod.meanWidth(),c_precision, "mm").c_str());
                 xmlBrlSensorProperties->SetAttribute("sensorThickness", printWithUnit(iMod.thickness(),c_precision, "mm").c_str());
-                xmlBrlSensorProperties->SetAttribute("resRPhi"        , printWithUnit(iMod.resolutionLocalX(), 1, "um").c_str());
-                xmlBrlSensorProperties->SetAttribute("resZ"           , printWithUnit(iMod.resolutionLocalY(), 1, "um").c_str());
+                xmlBrlSensorProperties->SetAttribute("resRPhi"        , printWithUnit(iMod.resLocalRPhi(), 1      , "um").c_str());
+                xmlBrlSensorProperties->SetAttribute("resZ"           , printWithUnit(iMod.resLocalZ()   , 1      , "um").c_str());
 
                 auto xmlBrlModComponents = m_xmlDefinitionsDoc->NewElement("components");
                 xmlBrlModProperties->InsertEndChild(xmlBrlModComponents);
@@ -422,8 +422,8 @@ bool ExtractorFCCSW::analyze()
                 xmlBrlSensorProperties->SetAttribute("sensorLength"   , printWithUnit(iMod.length(),   c_precision, "mm").c_str());
                 xmlBrlSensorProperties->SetAttribute("sensorWidth"    , printWithUnit(iMod.meanWidth(),c_precision, "mm").c_str());
                 xmlBrlSensorProperties->SetAttribute("sensorThickness", printWithUnit(iMod.thickness(),c_precision, "mm").c_str());
-                xmlBrlSensorProperties->SetAttribute("resRPhi"        , printWithUnit(iMod.resolutionLocalX(), 1, "um").c_str());
-                xmlBrlSensorProperties->SetAttribute("resZ"           , printWithUnit(iMod.resolutionLocalY(), 1, "um").c_str());
+                xmlBrlSensorProperties->SetAttribute("resRPhi"        , printWithUnit(iMod.resLocalRPhi(), 1      , "um").c_str());
+                xmlBrlSensorProperties->SetAttribute("resZ"           , printWithUnit(iMod.resLocalZ()   , 1      , "um").c_str());
 
                 auto xmlBrlModComponents = m_xmlDefinitionsDoc->NewElement("components");
                 xmlBrlModProperties->InsertEndChild(xmlBrlModComponents);
@@ -590,8 +590,8 @@ bool ExtractorFCCSW::analyze()
                   xmlEcapSensorProperties->SetAttribute("sensorWidthMin" , printWithUnit(iMod.minWidth(), c_precision, "mm").c_str());
                   xmlEcapSensorProperties->SetAttribute("sensorWidthMax" , printWithUnit(iMod.maxWidth(), c_precision, "mm").c_str());
                   xmlEcapSensorProperties->SetAttribute("sensorThickness", printWithUnit(iMod.thickness(),c_precision, "mm").c_str());
-                  xmlEcapSensorProperties->SetAttribute("resRPhi"        , printWithUnit(iMod.resolutionLocalX(), 1, "um").c_str());
-                  xmlEcapSensorProperties->SetAttribute("resZ"           , printWithUnit(iMod.resolutionLocalY(), 1, "um").c_str());
+                  xmlEcapSensorProperties->SetAttribute("resRPhi"        , printWithUnit(iMod.resLocalRPhi(), 1      , "um").c_str());
+                  xmlEcapSensorProperties->SetAttribute("resZ"           , printWithUnit(iMod.resLocalZ()   , 1      , "um").c_str());
 
                   auto xmlEcapModComponents = m_xmlDefinitionsDoc->NewElement("components");
                   xmlEcapModProperties->InsertEndChild(xmlEcapModComponents);
