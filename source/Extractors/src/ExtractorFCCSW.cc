@@ -8,6 +8,7 @@
 
 // System include files
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/range/join.hpp>
 #include <map>
 
 // Project include files
@@ -297,8 +298,7 @@ bool ExtractorFCCSW::analyze()
         auto xmlBrlRods = m_xmlDefinitionsDoc->NewElement("rods");
 
         // Add detailed info about straight rods
-        // TODO: Add tilted rods
-        for (const auto& iRod : iLayer.flatRods()) {
+        for (const auto& iRod : boost::join(iLayer.flatRods(), iLayer.tiltedRods())) {
 
           // Odd rods
           if (iRod.myid()==1) {
@@ -307,7 +307,6 @@ bool ExtractorFCCSW::analyze()
             xmlBrlRods->SetAttribute("repeat",        iLayer.numRods());
             xmlBrlRods->SetAttribute("smallDelta",    printWithUnit(iLayer.smallDelta(), c_precision, "mm").c_str());
             xmlBrlRods->SetAttribute("rPhiOverlap",   printWithUnit(iLayer.phiOverlap(), c_precision, "mm").c_str());
-            xmlBrlRods->SetAttribute("nRPhiSegments", iLayer.phiSegments());
             try {
               xmlBrlRods->SetAttribute("zOverlap", printWithUnit((dynamic_cast<const RodPairStraight&>(iRod)).zOverlap(), c_precision, "mm").c_str());
             }
@@ -317,7 +316,7 @@ bool ExtractorFCCSW::analyze()
             xmlBrlIthLayer->InsertEndChild(xmlBrlRods);
 
             // Odd rod
-            auto xmlBrlRodOdd = m_xmlDefinitionsDoc->NewElement("rodOdd");
+            auto xmlBrlRodOdd = m_xmlDefinitionsDoc->NewElement((iRod.isTilted() ? "rodOddTilted" : "rodOdd"));
             xmlBrlRodOdd->SetAttribute("id", iRod.myid());
             xmlBrlRods->InsertEndChild(xmlBrlRodOdd);
 
@@ -394,9 +393,9 @@ bool ExtractorFCCSW::analyze()
             }
           }
           // Even rods
-          else if (iRod.myid()==2) {
+          else if (iRod.myid()==2 ) {
 
-            auto xmlBrlRodEven = m_xmlDefinitionsDoc->NewElement("rodEven");
+            auto xmlBrlRodEven = m_xmlDefinitionsDoc->NewElement((iRod.isTilted() ? "rodEvenTilted" : "rodEven"));
             xmlBrlRodEven->SetAttribute("id", iRod.myid());
             xmlBrlRods->InsertEndChild(xmlBrlRodEven);
 
@@ -472,10 +471,7 @@ bool ExtractorFCCSW::analyze()
               xmlBrlModules->InsertEndChild(xmlBrlMod);
             }
 
-          }
-          else {
-            break;
-          } // Only first odd & even rod read-in
+          } // only first odd and even rods exported
         } // Rods
       } // Layers
     } // Barrels
