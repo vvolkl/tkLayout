@@ -32,7 +32,8 @@ static const double geom_support_margin_top         = 2;      // mm
 
 static const double geom_safety_factor              = 1.1;
 
-static const int    default_n_tracks                = 100;                       // Default number of tracks simulated (max_eta_coverage/default_n_tracks = etaStep)
+static const int    default_n_tracks                = 100;    // Default number of tracks simulated (max_eta_coverage/default_n_tracks = etaStep)
+static const double track_maxSinPhi                 = 0.95;   // Tracking done in interval phi= 0 - Phi, where R*2Phi equals arc length, i.e. 1.0 corresponds to half-circle
 
 /**
  * Visualisation constants: material parameters for active surfaces, services and supports, plus top volume padding.

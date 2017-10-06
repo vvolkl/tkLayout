@@ -91,7 +91,10 @@ public:
   double        getRPos() const             { return m_rPos;};
   double        getZPos() const             { return m_zPos;};
   double        getRPhiLength() const       { return m_rPhiLength; }
-  double        getCosPhiHalf() const       { return m_C; }
+  double        getCosBeta() const          { return m_C; }
+  double        getSinBeta() const          { return m_A; }
+  double        getPhiMinusPhi0() const     { return 2*m_beta; }
+  double        getBeta() const             { return m_beta;}
   double        getSLength()  const         { return m_sLength; }
   double        getTilt() const             { if (this->isMeasurable()) return m_hitModule->tiltAngle(); else return 0; };
   bool          isActive() const            { if (m_activity==HitActivity::Active) return true; else return false;};
@@ -137,15 +140,15 @@ protected:
   void setHitPassiveElement(const InactiveElement* myPassiveElem);
 
   double         m_distance;      //!< Distance of hit from origin in 3D = sqrt(rPos*rPos + zPos*zPos)
-  double         m_xPos;          //!< Given track radius, distance of hit from origin in x
-  double         m_yPos;          //!< Given track radius, distance of hit from origin in y
+  double         m_xPos;          //!< Given track radius, distance of hit from origin in x = r.cos(beta-beta0) = r.cos(Phi/2-Phi0/2)
+  double         m_yPos;          //!< Given track radius, distance of hit from origin in y = r.sin(beta-beta0) = r.sin(Phi/2-Phi0/2)
   double         m_rPos;          //!< Distance of hit from origin in the x/y plane (cylindrical coordinates -> r)
   double         m_zPos;          //!< Distance of hit from origin in z (cylindrical coordinates -> z)
-  double         m_A;             //!< Given track radius: rPos/2R (sin[(phi-phi0)/2])
-  double         m_C;             //!< Given track radius: cos[(phi-phi0)/2]
-  double         m_phi;           //!< Given track radius: phi-phi0
-  double         m_sLength;       //!< Given track radius, R(phi-phi0)/sin(theta) -> track length
-  double         m_rPhiLength;    //!< Given track radius, arc length : R(phi-phi0)
+  double         m_A;             //!< Given track radius: rPos/2R (sin[(Phi/2-Phi0/2)])
+  double         m_C;             //!< Given track radius: cos[(Phi/2-Phi0/2)]
+  double         m_beta;          //!< Given track radius: Phi/2-Phi0/2, where Phi & (rPos) represent circle polar coordinates with respect to PCR at Phi0
+  double         m_sLength;       //!< Given track radius, R(Phi/2-Phi0/2)/sin(theta) -> track length with respect to PCR at Phi0
+  double         m_rPhiLength;    //!< Given track radius, arc length with respect to PCR at phi0 : R(Phi/2-Phi0/2)
   HitActivity    m_activity;      //!< Hit defined as pure material (inactive) or measurement point (active)
   HitModuleType  m_hitModuleType; //!< Hit coming from inner, outer, stub, ... module
   HitActiveType  m_activeHitType; //!< Hit may be coming from position and/or time measurement

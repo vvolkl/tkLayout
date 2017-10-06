@@ -59,7 +59,7 @@ Hit::Hit() {
     m_yPos             = 0;
     m_rPos             = 0;
     m_zPos             = 0;
-    m_phi              = 0;
+    m_beta             = 0;
     m_rPhiLength       = 0;
     m_sLength          = 0;
     m_activity         = HitActivity::Undefined;
@@ -90,7 +90,7 @@ Hit::Hit(const Hit& h) {
     m_yPos              = h.m_yPos;
     m_rPos              = h.m_rPos;
     m_zPos              = h.m_zPos;
-    m_phi               = h.m_phi;
+    m_beta              = h.m_beta;
     m_rPhiLength        = h.m_rPhiLength;
     m_sLength           = h.m_sLength;
     m_activity          = h.m_activity;
@@ -121,7 +121,7 @@ Hit::Hit(double rPos, double zPos, const InactiveElement* myPassiveElem, HitPass
     m_yPos              = 0;    // High-momentum limit -> recalculated once known track
     m_rPos              = rPos;
     m_zPos              = zPos;
-    m_phi               = 0;    // High-momentum limit -> recalculated once known track
+    m_beta              = 0;    // High-momentum limit -> recalculated once known track
     m_rPhiLength        = rPos; // High-momentum limit -> recalculated once known track
     m_sLength           = 0;    // Needs to be recalculated once known track;
     m_activity          = HitActivity::Inactive;
@@ -158,7 +158,7 @@ Hit::Hit(double rPos, double zPos, const DetectorModule* myModule, HitModuleType
     m_yPos             = 0;    // High-momentum limit -> recalculated once known track
     m_rPos             = rPos;
     m_zPos             = zPos;
-    m_phi              = 0;    // High-momentum limit -> recalculated once known track
+    m_beta             = 0;    // High-momentum limit -> recalculated once known track
     m_rPhiLength       = rPos; // High-momentum limit -> recalculated once known track
     m_sLength          = 0;    // Needs to be recalculated once known track;
     m_activity         = HitActivity::Active;
@@ -208,8 +208,8 @@ void Hit::setTrack(const Track* newTrack) {
   m_C          = sqrt(1-m_A*m_A);
   m_xPos       = m_rPos*m_C;
   m_yPos       = m_rPos*m_A;
-  m_phi        = (m_A==0) ? 0. : asin(m_A)*2;
-  m_rPhiLength = (m_A==0) ? m_rPos : m_track->getRadius(m_zPos)*m_phi;
+  m_beta       = (m_A==0) ? 0. : asin(m_A);
+  m_rPhiLength = (m_A==0) ? m_rPos : m_track->getRadius(m_zPos)*2*m_beta;
   m_sLength    = m_rPhiLength/sin(m_track->getTheta());
 };
 
@@ -255,33 +255,27 @@ double Hit::getRphiResolution(double trackRadius) {
     // Module hit
     if (m_hitModule) {
 
-      // R-Phi-resolution calculated as for a virtual barrel-type module -> transform local R-Phi res. to a true module orientation (rotation by theta angle, skew, tilt)
-      // In detail, take into account a propagation of MS error on virtual barrel plane, on which all measurements are evaluated for consistency (global chi2 fit applied) ->
-      // in limit R->inf. propagation along line used, otherwise a very small correction factor coming from the circular shape of particle track is required (similar
-      // approach as for local resolutions)
-      // TODO: Currently, correction mathematicaly derived only for use case of const magnetic field -> more complex mathematical expression expected in non-const B field
-      // (hence correction not applied in such case)
+      // R-Phi-resolution as calculated for a virtual barrel-type module in natural circle polar coordinates (transform local R-Phi res. to a true module orientation, i.e.
+      // applying rotation by theta angle, skew, tilt etc.) -> necessary for consistent evaluation of local errors in global context of chi2 fit
+      // TODO: Currently, correction mathematicaly derived only for use case of const magnetic field -> more complex mathematical expression expected in a non-const B field
       double A = 0;
       double C = 1;
       if (SimParms::getInstance().isMagFieldConst()) A = m_A; // r_i / 2R
       if (SimParms::getInstance().isMagFieldConst()) C = m_C; // sqrt[1-(r_i / 2R)^2)]
-      double B            = A/sqrt(1-A*A);
+      double B            = A/C;
       double tiltAngle    = m_hitModule->tiltAngle();
       double skewAngle    = m_hitModule->skewAngle();
       double resLocalRPhi = m_hitModule->resLocalRPhi();
       double resLocalZ    = m_hitModule->resLocalZ();
 
       // All modules & its resolution propagated to the resolution of a virtual barrel module (endcap is tilted by 90 degrees, barrel is tilted by 0 degrees)
-      double resolutionRPhi = 0.;
+      double resolutionRPhi = 0;
 
       // For consistency reasons use parabolic approx or full approach
-      if (SimParms::getInstance().useParabolicApprox()) {
-
-        // TODO: Skew angle not used at the moment
-        // resolutionRPhi = sqrt(pow((B*sin(skewAngle)*cos(tiltAngle) + cos(skewAngle)) * resLocalRPhi,2) + pow(B*sin(tiltAngle) * resLocalZ,2));
-        resolutionRPhi = sqrt( pow(resLocalRPhi,2) + pow(B*sin(tiltAngle)*resLocalZ,2) );
-      }
-      else resolutionRPhi = sqrt( pow(C*resLocalRPhi,2) + pow(A*sin(tiltAngle)*resLocalZ,2) );
+      // TODO: Skew angle not used at the moment
+      // resolutionRPhi = sqrt(pow((B*sin(skewAngle)*cos(tiltAngle) + cos(skewAngle)) * resLocalRPhi,2) + pow(B*sin(tiltAngle) * resLocalZ,2));
+      if (SimParms::getInstance().useParabolicApprox()) resolutionRPhi = sqrt( pow(resLocalRPhi,2)   + pow(B*sin(tiltAngle)*resLocalZ,2) );
+      else                                              resolutionRPhi = sqrt( pow(C*resLocalRPhi,2) + pow(A*sin(tiltAngle)*resLocalZ,2) );
 
       return resolutionRPhi;
     }
@@ -318,12 +312,9 @@ double Hit::getZResolution(double trackRadius) {
       }
       else {
 
-        // Z-resolution calculated as for a virtual barrel-type module -> transform local Z res. to a true module orientation (rotation by theta angle, skew, tilt)
-        // In detail, take into account a propagation of MS error on virtual barrel plane, on which all measurements are evaluated for consistency (global chi2 fit applied) ->
-        // in limit R->inf. propagation along line used, otherwise a very small correction factor coming from the circular shape of particle track is required (similar
-        // approach as for local resolutions)
-        // TODO: Currently, correction mathematicaly derived only for use case of const magnetic field -> more complex mathematical expression expected in non-const B field
-        // (hence correction not applied in such case)
+        // Z-Phi-resolution as calculated for a virtual barrel-type module in natural circle polar coordinates (transform local R-Phi res. to a true module orientation, i.e.
+        // applying rotation by theta angle, skew, tilt etc.) -> necessary for consistent evaluation of local errors in global context of chi2 fit
+        // TODO: Currently, correction mathematicaly derived only for use case of const magnetic field -> more complex mathematical expression expected in a non-const B field
         double A = 0;
         double C = 1;
         if (SimParms::getInstance().isMagFieldConst()) A = m_A; // r_i / 2R
@@ -339,13 +330,10 @@ double Hit::getZResolution(double trackRadius) {
         double resolutionZ = 0;
 
         // For consistency reasons use parabolic approx or full approach
-        if (SimParms::getInstance().useParabolicApprox()) {
-
-          // TODO: Skew angle not used at the moment
-          //double resolutionZ = sqrt(pow(((D*cos(tiltAngle) + sin(tiltAngle))*sin(skewAngle)) * resLocalX,2) + pow((D*sin(tiltAngle) + cos(tiltAngle)) * resLocalY,2));
-          resolutionZ = sqrt( pow((D*sin(tiltAngle) + cos(tiltAngle))*resLocalZ,2) );
-        }
-        else resolutionZ = sqrt( pow((C*cotgTheta*sin(tiltAngle) + cos(tiltAngle))*resLocalZ,2) + pow(A*cotgTheta*resLocalRPhi,2) );
+        // TODO: Skew angle not used at the moment
+        // resolutionZ = sqrt(pow(((D*cos(tiltAngle) + sin(tiltAngle))*sin(skewAngle)) * resLocalX,2) + pow((D*sin(tiltAngle) + cos(tiltAngle)) * resLocalY,2));
+        if (SimParms::getInstance().useParabolicApprox()) resolutionZ = sqrt( pow((D*sin(tiltAngle)   + cos(tiltAngle))*resLocalZ,2) );
+        else                                              resolutionZ = sqrt( pow((D*C*sin(tiltAngle) + cos(tiltAngle))*resLocalZ,2) + pow(A*cotgTheta*resLocalRPhi,2) );
 
         return resolutionZ;
       }

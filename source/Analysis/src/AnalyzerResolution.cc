@@ -111,9 +111,9 @@ bool AnalyzerResolution::analyze()
     // Define track
     Track matTrack;
 
-    double eta   = 0 + m_etaMax/m_nTracks*(iTrack+0.5);
-    double theta = 2 * atan(exp(-eta));
-    double phi   = myDice.Rndm() * M_PI * 2.0;
+    double eta   = 0 + m_etaMax/m_nTracks*(iTrack+0.5);     // double eta   = 0.00001;// + m_etaMax/m_nTracks*(iTrack+0.5);
+    double theta = 2 * atan(exp(-eta));                     // double theta = 89.5/180.*M_PI; // 50, 37
+    double phi   = myDice.Rndm() * M_PI * 2.0;              // double phi   = M_PI/2.;//myDice.Rndm() * M_PI * 2.0;
     double pT    = 100*Units::TeV; // Arbitrarily high number
 
     matTrack.setThetaPhiPt(theta, phi, pT);
@@ -599,15 +599,38 @@ void AnalyzerResolution::preparePlot(std::vector<unique_ptr<TProfile>>& profHisA
 
       // Evaluate at reference point [r,z] =[0,0]
       double rPos = 0.0;
-      if (varType=="pT")        yVal = track->getDeltaPtOverPt(rPos)*100; // In percent
-      if (varType=="p")         yVal = track->getDeltaPOverP(rPos)*100;   // In percent
-      if (varType=="d0")        yVal = track->getDeltaD0()/Units::um;
-      if (varType=="z0")        yVal = track->getDeltaZ0()/Units::um;
-      if (varType=="phi0")      yVal = track->getDeltaPhi0()/M_PI*180.; // In degerees
-      if (varType=="cotgTheta") yVal = track->getDeltaCtgTheta(rPos);
-      if (varType=="ctau")      yVal = track->getDeltaCTau()/Units::um;
+      if (SimParms::getInstance().useParabolicApprox()) {
+        if (varType=="pT")        yVal = track->getDeltaPtOverPt(rPos)*100; // In percent
+        if (varType=="p")         yVal = track->getDeltaPOverP(rPos)*100;   // In percent
+        if (varType=="d0")        yVal = track->getDeltaD0()/Units::um;
+        if (varType=="z0")        yVal = track->getDeltaZ0()/Units::um;
+        if (varType=="phi0")      yVal = track->getDeltaPhi0()/M_PI*180.; // In degerees
+        if (varType=="cotgTheta") yVal = track->getDeltaCtgTheta(rPos);
+        if (varType=="ctau")      yVal = track->getDeltaCTau()/Units::um;
+      }
+      else {
+        if (varType=="pT")        yVal = track->getDeltaPtOverPtFull()*100; // In percent
+        if (varType=="p")         yVal = track->getDeltaPOverP(rPos)*100;   // In percent
+        if (varType=="d0")        yVal = track->getDeltaD0Full()/Units::um;
+        if (varType=="z0")        yVal = track->getDeltaZ0Full()/Units::um;
+        if (varType=="phi0")      yVal = track->getDeltaPhi0Full()/M_PI*180.; // In degerees
+        if (varType=="cotgTheta") yVal = track->getDeltaCtgThetaFull();
+      }
 
       if (yVal>0) profHis->Fill(xVal, yVal);
+
+      // Print
+      // if (varType=="pT" && scenario=="const p_{T}") {
+      //
+      //   double sinThSq = sin(track->getTheta())*sin(track->getTheta());
+      //
+      //   std::cout << "> pt    = " << track->getPt()/Units::GeV << std::endl;
+      //   std::cout << ">>dpt/pt= " << track->getDeltaPtOverPt(rPos)*100      << " " << track->getDeltaPtOverPtFull()*100          << std::endl;
+      //   std::cout << ">>dPhi0 = " << track->getDeltaPhi0()*1000             << " " << track->getDeltaPhi0Full()*1000             << std::endl;
+      //   std::cout << ">>dD0   = " << track->getDeltaD0()/Units::um          << " " << track->getDeltaD0Full()/Units::um          << std::endl;
+      //   std::cout << ">>dZ0   = " << track->getDeltaZ0()/Units::um          << " " << track->getDeltaZ0Full()/Units::um          << std::endl;
+      //   std::cout << ">>dTheta= " << track->getDeltaCtgTheta(0)*sinThSq*1000<< " " << track->getDeltaCtgThetaFull()*sinThSq*1000 << std::endl << std::endl;;
+      // }
 
     } // For tracks
 
