@@ -108,7 +108,7 @@ user, the following parameters are particularly important:
 
 # Run tkLayout
 To learn about the tkLayout functionality, simply run `tklayout` with no input parameters defined. The typical 
-configuration being used to study a tracker geometry, material budget and tracker resolution is the following
+configuration being used to study a tracker geometry, material budget and tracker resolution is the following:
 
     cd run
     tklayout -n 1000 -N 1000 geometries/FCChh_v3.03/FCChh_v3.03.cfg 
@@ -125,7 +125,7 @@ directory (predefined in tkLayout main directory). Similarly, some general confi
 predefined in **config** and **xml** directories. Make a symbolic link in a geometry directory to these too.
 
 # Update
-To get the latest development version (usually UNSTABLE) one simply types
+To get the latest development version (usually UNSTABLE) one simply types:
 
     git fetch
     git chechout masterLite (or devLite)
