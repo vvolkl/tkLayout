@@ -81,9 +81,9 @@ file will be created in $HOME/.tkgeometry:
 4. Author of generated results
 
 # Geometry description
-In order to ease the start-up with the tkLayout-lite SW, several reference geometry descriptions have been included within 
-the SW package. They can be found in tkLayout **geometries** directory, namely `geometries/CMS` (for CMS Ph2 studies) and 
-`geometries/FCC` (for FCC-hh studies). Choose one of the geometries, e.g. `FCChh_v3.03`, copy its content to **run** 
+In order to ease the start-up with **tkLayout-lite** SW, several reference geometry descriptions have been included within 
+the SW package. They can be found in tkLayout `geometries` directory, namely `geometries/CMS` (for CMS Ph2 studies) and 
+`geometries/FCC` (for FCC-hh studies). Choose one of the geometries, e.g. `FCChh_v3.03`, copy its content to `run` 
 directory and run tkLayout in this directory (using the main geometry configuration file as an input parameter):
 
     cd tkLayout
@@ -94,35 +94,35 @@ directory and run tkLayout in this directory (using the main geometry configurat
  
 The geometry description is defined and structured across several configuration files, one of which is the main config 
 file, e.g. `FCChh_v3.03.cfg`. The other files (like material description, individual modules description etc.) are included 
-to the main file using the directive commands **@include**. In addition to the main geometry configuration file, there 
+to the main file using the directive commands `@include`. In addition to the main geometry configuration file, there 
 exist also a simulation run parameters file: **SimParms** and file specifying general settings: **.tkgeometryrc**. The 
-first file is included to the main config file by directive `@include`, the latter is automatically created once tkLayout 
-is run for the first time in user's home directory. The **.tkgeometryrc** file may be deleted, tkLayout will 
-create a new one and ask user for redefining all its values. This file may also be directly modified by a user, the 
-following parameters are particularly important:
+first one is included to the main config file by directive `@include`, the latter is automatically created once tkLayout 
+is run for the first time in a user's home directory. The `.tkgeometryrc` file may be deleted, tkLayout will 
+automatically create a new one and a ask user for redefining all its values. This file may also be directly modified by the  
+user, the following parameters are particularly important:
 
     TKG_LAYOUTDIRECTORY="$userhome/tkLayout/run" -> Look for geometry layouts in this directory   
     TKG_STANDARDDIRECTORY="$userhome/tkLayout/run" -> Look for standard config files in this directory (xml, config, etc.)
-    TKG_MOMENTA="1.0,2.0,5.0" -> Define transverse momenta values in GeV/c
-    TKG_PROJECT="FCC-hh" -> Define project name
+    TKG_MOMENTA="1.0,2.0,5.0" -> Define individual values of transverse momenta in GeV/c
+    TKG_PROJECT="FCC-hh" -> Define a project name
 
 # Run tkLayout
-To learn about the tkLayout functionality, simply run **tklayout** with no input parameters defined. The typical 
-configuration being used to study tracker geometry, material budget and tracker resolution is the following
+To learn about the tkLayout functionality, simply run `tklayout` with no input parameters defined. The typical 
+configuration being used to study a tracker geometry, material budget and tracker resolution is the following
 
     cd run
     tklayout -n 1000 -N 1000 geometries/FCChh_v3.03/FCChh_v3.03.cfg 
   
-The parameter `-n` defines statistics to be simulated for geometry calculations, `-N` on the other hand for material or 
-resolution calculations.  
+The parameter `-n` defines statistics to be simulated for geometry calculations, the parameter `-N` defines statistics for 
+material or resolution calculations.  
 
-Simulation results are automatically saved in a **results** directory, which is either newly created or rewritten under 
-geometry directory, e.g. `geometries/FCChh_v3.03/results`. Use any web browser on **results/index.html** file to display 
+The simulation results are automatically saved in a `results` directory, which is either newly created or rewritten under 
+geometry directory, e.g. `geometries/FCChh_v3.03/results`. Use any web browser on `results/index.html` file to display 
 all results in a compact way. The content of such directory may be deleted as it's automatically rewritten each time the 
 tkLayout SW is being run on the same geometry configuration. The way, how the web browser displays final results depends on 
 the cascade styles (being already predefined for tklayout). Hence, one needs to make a symbolic link to a **style** 
 directory (predefined in tkLayout main directory). Similarly, some general configurations (material database etc.) are 
-predefined in **config** and **xml** directories. Make a symbolic link in a geometry directory to these too.  
+predefined in **config** and **xml** directories. Make a symbolic link in a geometry directory to these too.
 
 # Update
 To get the latest development version (usually UNSTABLE) one simply types
