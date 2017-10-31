@@ -69,8 +69,9 @@ class AnalyzerGeometry : public AnalyzerUnit {
 
  private:
 
-  //! Draw beam-pipe in RZ to given canvas
-  void drawBeamPipeRZ(TCanvas& canvas, double maxZ);
+  //! Draw beam-pipe in RZ to given canvas, set up-to which Z pos draw the beam-pipe contour & whether draw beam-pipe
+  //! in both +-Z or just +Z (default)
+  void drawBeamPipeRZ(TCanvas& canvas, double maxZ, bool bothPlsMinZ=false);
   //! Draw beam-pipe in XY to given canvas
   void drawBeamPipeXY(TCanvas& canvas);
 

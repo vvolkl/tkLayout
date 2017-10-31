@@ -265,7 +265,7 @@ bool AnalyzerOccupancy::drawHistogram(TCanvas& canvas, TH2D* his, const Irradiat
     his->GetXaxis()->SetTitleOffset(1.2);
     his->GetYaxis()->SetTitle(std::string("R ["+map->getRUnit()+"]").c_str());
     his->GetYaxis()->SetTitleOffset(1.2);
-    his->GetYaxis()->SetRangeUser(m_beamPipe->radius(), his->GetYaxis()->GetXmax());
+    his->GetYaxis()->SetRangeUser(m_beamPipe->minRadius(), his->GetYaxis()->GetXmax());
     return true;
   }
   else return false;
