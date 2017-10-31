@@ -66,15 +66,18 @@ std::set<string> preprocessConfiguration(std::istream& is, std::ostream& os, con
 //! Exception class to be used when using boost property_tree
 class PathfulException : public std::invalid_argument {
   string m_path;
+  string m_what;
 public:
-  PathfulException(const string& what, const string& path) : std::invalid_argument(what.c_str()) { pushPath(path); }
-  template<class T> PathfulException(const string& what, const T& obj, const string& objid) : std::invalid_argument(what.c_str()) { pushPath(obj, objid); }
-  PathfulException(const string& what) : std::invalid_argument(what.c_str()) {}
-  void pushPath(const string& p) { m_path = p + (!m_path.empty() ? "." + m_path : ""); }
-  template<class T> void pushPath(const T& obj, const string& objid) { pushPath(string(typeid(obj).name()) + "(" + objid + ")"); }
-  template<class T, class U> void pushPath(const T& obj, const U& objid) { pushPath(string(typeid(obj).name()) + "(" + any2str(objid) + ")"); }
+                    PathfulException(const string& what, const string& path) : std::invalid_argument(what.c_str())                { m_what = std::invalid_argument::what(); pushPath(path);}
+  template<class T> PathfulException(const string& what, const T& obj, const string& objid) : std::invalid_argument(what.c_str()) { m_what = std::invalid_argument::what(); pushPath(obj, objid); }
+                    PathfulException(const string& what) : std::invalid_argument(what.c_str())                                    { m_what = std::invalid_argument::what();}
+
+  void                            pushPath(const string& p)                   { m_path = p + (!m_path.empty() ? "." + m_path : "");                m_what = m_path + " : " + std::invalid_argument::what();}
+  template<class T> void          pushPath(const T& obj, const string& objid) { pushPath(string(typeid(obj).name()) + "(" + objid + ")");          m_what = m_path + " : " + std::invalid_argument::what();}
+  template<class T, class U> void pushPath(const T& obj, const U& objid)      { pushPath(string(typeid(obj).name()) + "(" + any2str(objid) + ")"); m_what = m_path + " : " + std::invalid_argument::what();}
+
   const string& path() const { return m_path; }
-  virtual const char* what() const throw() override { return (path() + " : " + std::invalid_argument::what()).c_str(); }
+  virtual const char* what() const noexcept override { return m_what.c_str(); }
 };
 
 struct CheckedPropertyMissing : public PathfulException { CheckedPropertyMissing(const string& objid) : PathfulException("Checked property not set", objid) {} };
@@ -378,8 +381,9 @@ public:
       if (interval.size() == 1) keys.push_back(interval[0]); // if size == 1, it means no '-' was found and the string was actually not an interval
       else for (int i = interval[0]; i <= interval[1]; i++) keys.push_back(i); // explode the interval
     }
-    for (auto k : keys) {
-      if (this->count(k) == 0 && !weak) this->insert(make_pair(k, pt)); 
+    for (const auto& k : keys) {
+
+      if (this->count(k) == 0 && !weak) this->insert(make_pair(k,pt));
       else if (this->count(k) > 0) for (auto& tel : pt) this->at(k).add_child(tel.first, tel.second);
     }
   }
