@@ -57,16 +57,14 @@ file before the compilation:
 
     source setup_slc6.sh
 
-On local Linux machine, the environmental variables need to be set first in a local `setup.sh` file and then the file has to be 
-sourced:
+On local Linux machine, the environmental variables need to be set first in a local `setup.sh` file:
 
  * `BOOST_LIB`: BOOST libs directory
  * `BOOST_INCLUDE`: BOOST include files directory
- * `BOOST_SUFFIX`: Usually no suffix on local machines, mainly used by complex computer systems to identify different versions of 
- BOOST installations 
- * `ROOTSYS`: ROOT 6 directory (`root-config` used by CMake to configure ROOT libs and includes for compilation is assumed to be 
- located in `ROOTSYS/bin`)
+ * `BOOST_SUFFIX`: Usually no suffix on local machines, mainly used by complex computer systems to identify different versions of BOOST installations 
+ * `ROOTSYS`: ROOT 6 directory (`root-config` used by CMake to configure ROOT libs and includes for compilation is assumed to be located in `ROOTSYS/bin`)
 
+and then the file has to be sourced:
 
     source setup.sh
 
