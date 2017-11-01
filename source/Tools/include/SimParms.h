@@ -112,6 +112,7 @@ class SimParms : public PropertyObject, public Buildable, public Visitable {
   ReadonlyProperty<bool  , Default>   useLumiRegInGeomBuild;//!< Apply luminous region constraints, when building geometry (build hermetic detector using z+-zErrorIP, rphiErrorIP negligible)
   ReadonlyProperty<bool  , Default>   useLumiRegInAnalysis; //!< Apply luminous region constraints, when analysing geometry (resolution, pattern reco, etc.)
   ReadonlyProperty<bool  , NoDefault> useIPConstraint;      //!< Use IP constraint in track fitting
+  ReadonlyProperty<bool  , Default>   useParabolicApprox;   //!< Use parabolic approximation in tracking & track propagation (for consistency reasons)
   ReadonlyProperty<int   , NoDefault> ptCost;
   ReadonlyProperty<int   , NoDefault> stripCost;
   ReadonlyProperty<double, NoDefault> efficiency;

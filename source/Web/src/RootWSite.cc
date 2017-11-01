@@ -24,8 +24,8 @@ using std::string;
 using std::vector;
 
 // Defined constants
-const string RootWSite::c_program_name          = "tkLayout";
-const string RootWSite::c_program_site          = "https://github.com/drasal/tkLayout/tree/masterLite"; // "https://github.com/alkemyst/tkLayout"
+const string RootWSite::c_program_name = "tkLayout-lite";
+const string RootWSite::c_program_site = "https://github.com/drasal/tkLayout/tree/masterLite";
 
 //
 // Default constructor

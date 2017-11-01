@@ -86,13 +86,13 @@ public:
   static string makeSensorResolTag(const BarrelModule& m) {
     stringstream ss;
     ss << "Barrel"
-       << "/Width=" << int(m.maxWidth()*1000)/1000.
-       << "/Height=" << int(m.length()*1000)/1000.
-       << "/Thickness=" << int(m.thickness()*1000)/1000.
-       << "/Type=" << m.moduleType()
-       << "/ResolutionX=" << m.resolutionLocalX()
-       << "/ResolutionY=" << m.resolutionLocalY()
-       << "/Faces=" << m.numSensors();
+       << "/Width="    << int(m.maxWidth() *1000)/1000.
+       << "/Height="   << int(m.length()   *1000)/1000.
+       << "/Thickness="<< int(m.thickness()*1000)/1000.
+       << "/Type="     << m.moduleType()
+       << "/ResRPhi="  << m.resLocalRPhi()
+       << "/ResZ="     << m.resLocalZ()
+       << "/Faces="    << m.numSensors();
     for (const auto& s : m.sensors()) ss << "/Segments=" << s.numSegments();
 
     return ss.str();
@@ -101,12 +101,12 @@ public:
   static string makeSensorResolTag(const EndcapModule& m) {
     stringstream ss;
     ss << "Barrel"
-       << "/Width=" << int(m.maxWidth()*1000)/1000.
-       << "/Height=" << int(m.length()*1000)/1000.
-       << "/Thickness=" << int(m.thickness()*1000)/1000.
-       << "/Type=" << m.moduleType()
-       << "/ResolutionX=" << m.resolutionLocalX()
-       << "/ResolutionY=" << m.resolutionLocalY()
+       << "/Width="    << int(m.maxWidth() *1000)/1000.
+       << "/Height="   << int(m.length()   *1000)/1000.
+       << "/Thickness="<< int(m.thickness()*1000)/1000.
+       << "/Type="     << m.moduleType()
+       << "/ResRPhi="  << m.resLocalRPhi()
+       << "/ResZ="     << m.resLocalZ()
        << "/Faces=" << m.numSensors();
     for (const auto& s : m.sensors()) ss << "/Segments=" << s.numSegments();
 

@@ -28,9 +28,9 @@ Track::Track() :
   m_cotgTheta(0),
   m_eta(0),
   m_pt(0),
+  m_p(0),
   m_reSortHits(true),
-  m_covRPhiDone(false),
-  m_covRZDone(false),
+  m_covDone(false),
   m_refPointRPosCache(0),
   m_propagOutInCache(true)
 {}
@@ -45,25 +45,24 @@ Track::Track(const Track& track) {
   m_cotgTheta    = track.m_cotgTheta;
   m_eta          = track.m_eta;
   m_pt           = track.m_pt;
+  m_p            = track.m_p;
 
   m_origin       = track.m_origin;
   m_direction    = track.m_direction;
 
   m_reSortHits   = track.m_reSortHits;
-  m_covRPhiDone  = track.m_covRPhiDone;
-  m_covRZDone    = track.m_covRZDone;
+  m_covDone      = track.m_covDone;
   m_refPointRPosCache = track.m_refPointRPosCache;
   m_propagOutInCache  = track.m_propagOutInCache;
 
-  m_varMatrixRPhi.ResizeTo(track.m_varMatrixRPhi);
-  m_varMatrixRPhi = track.m_varMatrixRPhi;
   m_covMatrixRPhi.ResizeTo(track.m_covMatrixRPhi);
   m_covMatrixRPhi = track.m_covMatrixRPhi;
 
-  m_varMatrixRZ.ResizeTo(track.m_varMatrixRZ);
-  m_varMatrixRZ = track.m_varMatrixRZ;
   m_covMatrixRZ.ResizeTo(track.m_covMatrixRZ);
   m_covMatrixRZ = track.m_covMatrixRZ;
+
+  m_covMatrixFull.ResizeTo(track.m_covMatrixFull);
+  m_covMatrixFull = track.m_covMatrixFull;
 
   for (auto& iHit : track.m_hits) {
     HitPtr hit(new Hit(*iHit));
@@ -87,25 +86,24 @@ Track& Track::operator= (const Track& track) {
   m_cotgTheta    = track.m_cotgTheta;
   m_eta          = track.m_eta;
   m_pt           = track.m_pt;
+  m_p            = track.m_p;
 
   m_origin       = track.m_origin;
   m_direction    = track.m_direction;
 
   m_reSortHits   = track.m_reSortHits;
-  m_covRPhiDone  = track.m_covRPhiDone;
-  m_covRZDone    = track.m_covRZDone;
+  m_covDone      = track.m_covDone;
   m_refPointRPosCache = track.m_refPointRPosCache;
   m_propagOutInCache  = track.m_propagOutInCache;
 
-  m_varMatrixRPhi.ResizeTo(track.m_varMatrixRPhi);
-  m_varMatrixRPhi = track.m_varMatrixRPhi;
   m_covMatrixRPhi.ResizeTo(track.m_covMatrixRPhi);
   m_covMatrixRPhi = track.m_covMatrixRPhi;
 
-  m_varMatrixRZ.ResizeTo(track.m_varMatrixRZ);
-  m_varMatrixRZ = track.m_varMatrixRZ;
   m_covMatrixRZ.ResizeTo(track.m_covMatrixRZ);
   m_covMatrixRZ = track.m_covMatrixRZ;
+
+  m_covMatrixFull.ResizeTo(track.m_covMatrixFull);
+  m_covMatrixFull = track.m_covMatrixFull;
 
   for (auto& iHit : track.m_hits) {
     HitPtr hit(new Hit(*iHit));
@@ -124,60 +122,6 @@ Track::~Track() {
 
   // Clear memory
   m_hits.clear();
-}
-
-//
-// Main method calculating track parameters in s-z plane only, using linear fit with parameters: cotg(theta), z0 -> internally calling computation of covMatrixRZ
-// As the Multiple scattering effects must be set in a way to have then correct propagation of errors up-to ref. point [rPos,zPos] (including all dead materials between the
-// last measurement and the ref. point). E.g. for standard estimation of D0,Z0 parameters one calculates MS inside->out from rPos=0 (zPos can be calculated from rPos using theta).
-// PropagOutIn variable defines whether detectors at higher R than the ref. point (true) should be used for error calculation/propagation (e.g. d0,z0) or whether detectors at
-// lower R (false).
-// Return true if errors correctly calculated
-//
-bool Track::computeErrorsRZ(double refPointRPos/*=0*/, bool propagOutIn/*=true*/) {
-
-  // Sort hits based on particle direction: in-out or out-in (if needed)
-  if (m_reSortHits) {
-
-    bool bySmallerRadius = true;
-    if (m_pt>=0) sortHits(bySmallerRadius);
-    else         sortHits(!bySmallerRadius);
-    m_reSortHits = false;
-  }
-
-  // Compute the relevant 2x2 covariance matrix in RZ plane
-  m_covRZDone         = computeCovarianceMatrixRZ(fabs(refPointRPos),propagOutIn);
-  m_refPointRPosCache = refPointRPos;
-  m_propagOutInCache  = propagOutIn;
-
-  return m_covRZDone;
-}
-
-//
-// Main method calculating track parameters in r-phi plane only, using parabolic track approximation in R-Phi plane: 1/R, d0, phi0 parameters -> internally calling computation
-// of covMatrixRPhi. As the Multiple scattering effects must be set in a way to have then correct propagation of errors up-to the ref. point [rPos,zPos] (including all dead
-// materials between the last measurement and the ref. point). E.g. for standard estimation of D0,Z0 parameters one calculates MS inside->out from rPos=0 (zPos can be
-// calculated from rPos using theta). PropagOutIn variable defines whether detectors at higher R than the ref. point (true) should be used for error calculation/propagation
-// (e.g. d0,z0) or whether detectors at lower R (false).
-// Return true if errors correctly calculated
-//
-bool Track::computeErrorsRPhi(double refPointRPos/*=0*/, bool propagOutIn/*=true*/) {
-
-  // Sort hits based on particle direction: in-out or out-in (if needed)
-  if (m_reSortHits) {
-
-    bool bySmallerRadius = true;
-    if (m_pt>=0) sortHits(bySmallerRadius);
-    else         sortHits(!bySmallerRadius);
-    m_reSortHits = false;
-  }
-
-  // Compute the relevant 3x3 covariance matrix in RPhi plane
-  m_covRPhiDone       = computeCovarianceMatrixRPhi(fabs(refPointRPos),propagOutIn);
-  m_refPointRPosCache = refPointRPos;
-  m_propagOutInCache  = propagOutIn;
-
-  return m_covRPhiDone;
 }
 
 //
@@ -211,18 +155,17 @@ double Track::getMagField(double z) const {
 }
 
 //
-// Get DeltaRho (error on 1/R) at refPoint [rPos, zPos].
+// Get DeltaRho (error on 1/R) at refPoint [rPos, zPos] in "parabolic" approximation.
 // Propagator direction defines, which part of tracker (at higher radii or lower radii from the ref. point) is going to be used.
 // Using 3x3 covariance propagator in case [r,z]!=[0,0]
 //
 double Track::getDeltaRho(double refPointRPos, bool propagOutIn/*=true*/) {
 
   // (Re)compute cov. matrix in R-Phi if something changed
-  if (!m_covRPhiDone || refPointRPos!=m_refPointRPosCache || propagOutIn!=m_propagOutInCache) computeErrorsRPhi(refPointRPos, propagOutIn);
+  if (!m_covDone || refPointRPos!=m_refPointRPosCache || propagOutIn!=m_propagOutInCache) computeCovarianceMatrix(refPointRPos, propagOutIn);
 
   double deltaRho = -1.;
-
-  if (m_covRPhiDone && m_covMatrixRPhi(0,0)>=0) deltaRho = sqrt(m_covMatrixRPhi(0,0));
+  if (m_covDone && m_covMatrixRPhi(0,0)>=0) deltaRho = sqrt(m_covMatrixRPhi(0,0));
 
   // TODO: Not working correctly for B = B(z) & [r,z]!=[0,0], so print warning ...
   if (refPointRPos!=0. && !SimParms::getInstance().isMagFieldConst()) {
@@ -234,7 +177,7 @@ double Track::getDeltaRho(double refPointRPos, bool propagOutIn/*=true*/) {
 }
 
 //
-// Get DeltaPtOvePt at refPoint [rPos, zPos] (utilize the calculated deltaRho quantity)
+// Get DeltaPtOvePt at refPoint [rPos, zPos] in "parabolic" approximation (utilize the calculated deltaRho quantity).
 // Propagator direction defines, which part of tracker (at higher radii or lower radii from the ref. point) is going to be used.
 //
 double Track::getDeltaPtOverPt(double refPointRPos, bool propagOutIn/*=true*/) {
@@ -249,8 +192,27 @@ double Track::getDeltaPtOverPt(double refPointRPos, bool propagOutIn/*=true*/) {
   return deltaPtOverPt;
 }
 
+// Get DeltaPtOverPt at [0,0] in full math. approach, i.e. using full 5x5 covariance matrix
+double Track::getDeltaPtOverPtFull() {
+
+  double deltaPtOverPt = -1.;
+
+  // (Re)compute cov. matrix if something changed
+  double refPointRPos = 0;
+  bool   propagOutIn  = true;
+  if (!m_covDone) computeCovarianceMatrix(refPointRPos, propagOutIn);
+
+  double deltaRho = -1.;
+
+  if (m_covDone && m_covMatrixFull(0,0)>=0) deltaRho = sqrt(m_covMatrixFull(0,0));
+  double radius   = getRadius(0.);
+  if (deltaRho!=-1) deltaPtOverPt = deltaRho * radius; // dpT(z)/pT(z) = dRho(z) / Rho(z) = dRho(z) * R(z)
+
+  return deltaPtOverPt;
+}
+
 //
-// Get DeltaPOverP at refPoint [rPos, zPos] (utilize deltaRho & deltaCotgTheta quantities)
+// Get DeltaPOverP at refPoint [rPos, zPos] in "parabolic" approximation (utilize deltaRho & deltaCotgTheta quantities)
 // Propagator direction defines, which part of tracker (at higher radii or lower radii from the ref. point) is going to be used.
 //
 double Track::getDeltaPOverP(double refPointRPos, bool propagOutIn/*=true*/) {
@@ -268,25 +230,24 @@ double Track::getDeltaPOverP(double refPointRPos, bool propagOutIn/*=true*/) {
 }
 
 //
-// Get DeltaPhi(0) at refPoint [rPos, zPos] ([0,0])
+// Get DeltaPhi(Phi0) at refPoint [rPos, zPos] ([0,0]) in "parabolic" approximation
 // Propagator direction defines, which part of tracker (at higher radii or lower radii from the ref. point) is going to be used.
 // Using 3x3 covariance propagator in case [r,z]!=[0,0]
 //
 double Track::getDeltaPhi(double refPointRPos, bool propagOutIn/*=true*/) {
 
   // (Re)compute cov. matrix in R-Phi if something changed
-  if (!m_covRPhiDone || refPointRPos!=m_refPointRPosCache || propagOutIn!=m_propagOutInCache) computeErrorsRPhi(refPointRPos, propagOutIn);
+  if (!m_covDone || refPointRPos!=m_refPointRPosCache || propagOutIn!=m_propagOutInCache) computeCovarianceMatrix(refPointRPos, propagOutIn);
 
   double deltaPhi0 = -1.;
-
   // No covariance propagation necessary at [0,0,0] point
   if (refPointRPos==0.) {
 
-    if (m_covRPhiDone && m_covMatrixRPhi(1,1)>=0) deltaPhi0 = sqrt(m_covMatrixRPhi(1, 1));
+    if (m_covDone && m_covMatrixRPhi(1,1)>=0) deltaPhi0 = sqrt(m_covMatrixRPhi(1, 1));
   }
   else {
 
-    if (m_covRPhiDone) {
+    if (m_covDone) {
 
       double covRhoRho    = m_covMatrixRPhi(0,0);
       double covRhoPhi0   = m_covMatrixRPhi(0,1);
@@ -317,25 +278,41 @@ double Track::getDeltaPhi(double refPointRPos, bool propagOutIn/*=true*/) {
 }
 
 //
-// Get DeltaD(0) at refPoint [rPos, zPos] ([0,0])
+// GetDeltaPhi at [0,0] in full math. approach, i.e. using full 5x5 covariance matrix
+//
+double Track::getDeltaPhi0Full() {
+
+  double deltaPhi0 = -1.;
+
+  // (Re)compute cov. matrix if something changed
+  double refPointRPos = 0;
+  bool   propagOutIn  = true;
+  if (!m_covDone) computeCovarianceMatrix(refPointRPos, propagOutIn);
+
+  if (m_covDone && m_covMatrixFull(1,1)>=0) deltaPhi0 = sqrt(m_covMatrixFull(1,1));
+
+  return deltaPhi0;
+}
+
+//
+// Get DeltaD (D0) at refPoint [rPos, zPos] ([0,0]) in "parabolic" approximation
 // Propagator direction defines, which part of tracker (at higher radii or lower radii from the ref. point) is going to be used.
 // Using 3x3 covariance propagator in case [r,z]!=[0,0]
 //
 double Track::getDeltaD(double refPointRPos, bool propagOutIn/*=true*/) {
 
   // (Re)compute cov. matrix in R-Phi if something changed
-  if (!m_covRPhiDone || refPointRPos!=m_refPointRPosCache || propagOutIn!=m_propagOutInCache) computeErrorsRPhi(refPointRPos, propagOutIn);
+  if (!m_covDone || refPointRPos!=m_refPointRPosCache || propagOutIn!=m_propagOutInCache) computeCovarianceMatrix(refPointRPos, propagOutIn);
 
   double deltaD0 = -1.;
-
   // No covariance propagation necessary at [0,0,0] point
   if (refPointRPos==0.) {
 
-    if (m_covRPhiDone && m_covMatrixRPhi(2,2)>=0) deltaD0 = sqrt(m_covMatrixRPhi(2,2));
+    if (m_covDone && m_covMatrixRPhi(2,2)>=0) deltaD0 = sqrt(m_covMatrixRPhi(2,2));
   }
   else {
 
-    if (m_covRPhiDone) {
+    if (m_covDone) {
 
       double covRhoRho     = m_covMatrixRPhi(0,0);
       double covRhoPhi0    = m_covMatrixRPhi(0,1);
@@ -365,40 +342,76 @@ double Track::getDeltaD(double refPointRPos, bool propagOutIn/*=true*/) {
 }
 
 //
-// Get DeltaCtgTheta at refPoint [rPos, zPos]
+// Get DeltaD0, i.e. at [0,0] in full math. approach, i.e. using full 5x5 covariance matrix
+//
+double Track::getDeltaD0Full() {
+
+  double deltaD0 = -1.;
+
+  // (Re)compute cov. matrix if something changed
+  double refPointRPos = 0;
+  bool   propagOutIn  = true;
+  if (!m_covDone) computeCovarianceMatrix(refPointRPos, propagOutIn);
+
+  if (m_covDone && m_covMatrixFull(2,2)>=0) deltaD0 = sqrt(m_covMatrixFull(2,2));
+
+  return deltaD0;
+}
+
+//
+// Get DeltaCtgTheta at refPoint [rPos, zPos] in "parabolic" approximation
 // Propagator direction defines, which part of tracker (at higher radii or lower radii from the ref. point) is going to be used.
+// Using 2x2 covariance propagator in case [r,z]!=[0,0]
 //
 double Track::getDeltaCtgTheta(double refPointRPos, bool propagOutIn/*=true*/) {
 
   // (Re)compute cov. matrix in s-Z if something changed
-  if (!m_covRZDone || refPointRPos!=m_refPointRPosCache || propagOutIn!=m_propagOutInCache) computeErrorsRZ(refPointRPos, propagOutIn);
+  if (!m_covDone || refPointRPos!=m_refPointRPosCache || propagOutIn!=m_propagOutInCache) computeCovarianceMatrix(refPointRPos, propagOutIn);
 
   double deltaCtgTheta = -1.;
-  if (m_covRZDone && m_covMatrixRZ(0, 0)>=0) deltaCtgTheta = sqrt(m_covMatrixRZ(0, 0));
+  if (m_covDone && m_covMatrixRZ(0, 0)>=0) deltaCtgTheta = sqrt(m_covMatrixRZ(0, 0));
 
   return deltaCtgTheta;
 }
 
 //
-// Get DeltaZ(0) at refPoint [rPos, zPos] ([0,0])
+// Get DeltaCtgTheta at [0,0] in full math. approach, i.e. using fulll 5x5 covariance matrix
+//
+
+double Track::getDeltaCtgThetaFull() {
+
+  double deltaCtgTheta = -1.;
+
+  // (Re)compute cov. matrix if something changed
+  double refPointRPos = 0;
+  bool   propagOutIn  = true;
+  if (!m_covDone) computeCovarianceMatrix(refPointRPos, propagOutIn);
+
+  if (m_covDone && m_covMatrixFull(3,3)>=0) deltaCtgTheta = sqrt(m_covMatrixFull(3,3));
+
+  return deltaCtgTheta;
+}
+
+//
+// Get DeltaZ (Z0) at refPoint [rPos, zPos] ([0,0]) in "parabolic" approximation
 // Propagator direction defines, which part of tracker (at higher radii or lower radii from the ref. point) is going to be used.
 // Using 2x2 covariance propagator in case [r,z]!=[0,0]
 //
 double Track::getDeltaZ(double refPointRPos, bool propagOutIn/*=true*/) {
 
   // (Re)compute cov. matrix in s-Z if something changed
-  if (!m_covRZDone || refPointRPos!=m_refPointRPosCache || propagOutIn!=m_propagOutInCache) computeErrorsRZ(refPointRPos, propagOutIn);
+  if (!m_covDone || refPointRPos!=m_refPointRPosCache || propagOutIn!=m_propagOutInCache) computeCovarianceMatrix(refPointRPos, propagOutIn);
 
   double deltaZ0 = -1.;
 
   // No covariance propagation necessary at [0,0,0] point
   if (refPointRPos==0.) {
 
-    if (m_covRZDone && m_covMatrixRZ(1, 1)>=0) deltaZ0 = sqrt(m_covMatrixRZ(1, 1));
+    if (m_covDone && m_covMatrixRZ(1, 1)>=0) deltaZ0 = sqrt(m_covMatrixRZ(1, 1));
   }
   else {
 
-    if (m_covRZDone) {
+    if (m_covDone) {
 
       double covZ0Z0       = m_covMatrixRZ(1,1);
       double covZ0CtgTheta = m_covMatrixRZ(0,1);
@@ -412,6 +425,77 @@ double Track::getDeltaZ(double refPointRPos, bool propagOutIn/*=true*/) {
   }
 
   return deltaZ0;
+}
+
+//
+// Get DeltaZ0, i.e. at [0,0] in full math. approach, i.e. using full 5x5 covariance matrix
+//
+
+double Track::getDeltaZ0Full() {
+
+  double deltaZ0 = -1.;
+
+  // (Re)compute cov. matrix if something changed
+  double refPointRPos = 0;
+  bool   propagOutIn  = true;
+  if (!m_covDone) computeCovarianceMatrix(refPointRPos, propagOutIn);
+
+  if (m_covDone && m_covMatrixFull(4,4)>=0) deltaZ0 = sqrt(m_covMatrixFull(4, 4));
+
+  return deltaZ0;
+}
+
+//
+// Get DeltaT0 at refPoint [rPos, zPos] ([0,0]) combining all time-stamps along the track. Use track path length, defined as
+// difference between time layer and ref. point to calculated the time of flight correction factor to individual time measurements.
+//
+double Track::getDeltaT(double refPointRPos) {
+
+  double       deltaT = 0;
+
+  for (auto& iHit : m_timeHits) {
+
+    double radius    = getRadius(iHit->getZPos());
+    double deltaR    = iHit->getRPos() - refPointRPos;
+    double deltaZ    = iHit->getZPos() - refPointRPos*getCotgTheta();
+    double sinTheta  = sin(this->getTheta());
+    double cotgTheta = m_cotgTheta;
+    double cosTilt   = cos(iHit->getTilt());
+    double sinTilt   = sin(iHit->getTilt());
+
+    double sinPhiHalf    = iHit->getRPos()/2./radius;
+    double sinPhiHalfRef = refPointRPos/2./radius;
+    double cosPhiHalf    = sqrt(1-sinPhiHalf*sinPhiHalf);
+    double deltaPhi      = asin(sinPhiHalf)*2 - asin(sinPhiHalfRef)*2;
+    double pathLength    = radius*deltaPhi/sin(m_theta);
+
+    double sigmaT         = iHit->getTimeResolution();
+    double sigmaLocRPhiDet= iHit->getLocalRPhiResolution();
+    double sigmaLocZDet   = iHit->getLocalZResolution();
+    double sigmaPhiRef    = getDeltaPhi(refPointRPos);
+    double sigmaZRef      = getDeltaZ(refPointRPos);
+
+    double sigmaTRefSq = -1;
+    if (sigmaT!=-1 && sigmaLocRPhiDet!=-1 && sigmaLocZDet!=-1 && sigmaPhiRef!=-1) {
+
+      sigmaTRefSq = pow( (deltaZ*cosTilt - radius*deltaPhi*cosPhiHalf*sinTilt) * sigmaLocZDet,2);
+      sigmaTRefSq+= pow( (deltaZ) * sigmaZRef,2);
+      sigmaTRefSq+= pow( (radius*deltaPhi*sinPhiHalf) *sigmaLocRPhiDet,2);
+      sigmaTRefSq+= pow( (radius*radius*deltaPhi) * sigmaPhiRef,2);
+
+      sigmaTRefSq*= 1/Units::c/Units::c/pathLength/pathLength;
+      sigmaTRefSq += sigmaT*sigmaT;
+
+      // Do weighted average sigmaTot = sqrt[ 1/(Sum_i 1/sigma_i^2) ]
+      deltaT   += 1/sigmaTRefSq;
+    }
+  }
+
+  // Get final sigma from weighted average
+  if (deltaT>=0) deltaT = sqrt(1./deltaT);
+  else           deltaT = -1;
+
+  return deltaT;
 }
 
 //
@@ -443,14 +527,25 @@ void Track::addHit(HitPtr newHit) {
   }
   newHit->setTrack(this);
 
-  // Add new hit if it follows the parabolic approximation -> hits practically found at high pT limit, so in reality don't have to lie on the track
-  if (followsParabolicApprox(newHit->getRPos(), newHit->getZPos())) m_hits.push_back(std::move(newHit));
+  // Check that radial pos of new hit below track curling radius
+  if (isHitRPosLowerThanCurlingRadius(newHit->getRPos(), newHit->getZPos())) {
+
+    // Clone hit for timing information
+    if (newHit->isTimeMeasured()) {
+
+      HitPtr cloneHit(new Hit(*newHit));
+      m_timeHits.push_back(std::move(cloneHit));
+    }
+
+    // Save position hit into hits
+    m_hits.push_back(std::move(newHit));
+
+  }
   else newHit.reset(nullptr);
 
   // Hits need to be re-sorted & cov. matrices recalculated
   m_reSortHits  = true;
-  m_covRPhiDone = false;
-  m_covRZDone   = false;
+  m_covDone     = false;
 }
 
 //
@@ -472,14 +567,13 @@ void Track::addIPConstraint(double dr, double dz) {
   newHit->setResolutionRphi(dr);
   newHit->setResolutionZ(dz);
 
-  // Add new hit if it follows the parabolic approximation -> hits practically found at high pT limit, so in reality don't have to lie on the track
-  if (followsParabolicApprox(newHit->getRPos(), newHit->getZPos())) m_hits.push_back(std::move(newHit));
+  // Check that radial pos of new hit below track curling radius
+  if (isHitRPosLowerThanCurlingRadius(newHit->getRPos(), newHit->getZPos())) m_hits.push_back(std::move(newHit));
   else newHit.reset(nullptr);
 
   // Hits need to be re-sorted & cov. matrices recalculated
   m_reSortHits  = true;
-  m_covRPhiDone = false;
-  m_covRZDone   = false;
+  m_covDone     = false;
 }
 
 //
@@ -493,6 +587,7 @@ const Polar3DVector& Track::setThetaPhiPt(const double& newTheta, const double& 
   m_eta       = -log(tan(m_theta/2));
   m_phi       = newPhi;
   m_pt        = newPt;
+  m_p         = m_pt/sin(m_theta);
 
   if (m_pt>=0) m_direction.SetCoordinates(+1, m_theta, m_phi); // Particle inside-out
   else         m_direction.SetCoordinates(-1, m_theta, m_phi); // Particle outside-in
@@ -502,22 +597,23 @@ const Polar3DVector& Track::setThetaPhiPt(const double& newTheta, const double& 
 
   // Hits need to be re-sorted & cov. matrices recalculated
   m_reSortHits  = true;
-  m_covRPhiDone = false;
-  m_covRZDone   = false;
+  m_covDone     = false;
 
   return m_direction;
 }
 
 //
-// Re-set transverse momentum + resort hits (if changing direction) + initiate recalc of cov matrices + prune hits (otherwise they may not lie on the new track, originally found at high pT limit)
+// Re-set transverse momentum (recalculate hit quantities dependent on track radius) + resort hits (if changing direction) +
+// initiate recalc of cov matrices + prune hits (otherwise they may not lie on the new track, originally found at high pT limit)
 void Track::resetPt(double newPt) {
 
   if (newPt*m_pt<0) m_reSortHits = true;
-  m_covRPhiDone = false;
-  m_covRZDone   = false;
+  m_covDone     = false;
 
+  // Set pt, recalculate track radius related hit quantities & prune hits
   m_pt = newPt;
-
+  m_p  = m_pt/sin(m_theta);
+  for (auto& iHit : m_hits) { iHit->setTrack(this); }
   pruneHits();
 }
 
@@ -536,7 +632,8 @@ bool Track::pruneHits() {
   HitCollection newHits;
   for (auto& iHit : m_hits) {
 
-    if (followsParabolicApprox(iHit->getRPos(),iHit->getZPos())) newHits.push_back(std::move(iHit));
+    // Check that radial pos of new hit below track curling radius
+    if (isHitRPosLowerThanCurlingRadius(iHit->getRPos(),iHit->getZPos())) newHits.push_back(std::move(iHit));
     else {
 
       // Clear memory
@@ -591,8 +688,7 @@ void Track::keepTaggedHitsOnly(const string& tag, bool useIP /*=true*/) {
   }
 
   // Cov. matrices need to be recalculated
-  m_covRPhiDone = false;
-  m_covRZDone   = false;
+  m_covDone = false;
 }
 
 //
@@ -607,18 +703,13 @@ void Track::removeMaterial() {
   for (auto& iHit : m_hits) iHit->setCorrectedMaterial(nullMaterial);
 
   // Cov. matrices need to be recalculated
-  m_covRPhiDone = false;
-  m_covRZDone   = false;
+  m_covDone = false;
 }
 
 //
 // Helper method printing track covariance matrices in R-Phi
 //
 void Track::printErrors() {
-
-  std::cout << "Overview of track errors:" << std::endl;
-  std::cout << "Hit variance matrix: "  << std::endl;
-  m_varMatrixRPhi.Print();
 
   std::cout << "Covariance matrix: " << std::endl;
   m_covMatrixRPhi.Print();
@@ -645,11 +736,11 @@ void Track::printSymMatrix(const TMatrixTSym<double>& matrix) const {
     std::cout << "(";
     for (int j=0; j<nCols;j++) {
 
-      std::cout << " " << std::scientific << std::setprecision(4) << matrix(i,j);
+      std::cout << " " << std::showpos << std::scientific << std::setprecision(4) << matrix(i,j);
     }
     std::cout << ")" << std::endl;
   }
-  std::cout << std::endl;
+  std::cout << std::fixed << std::noshowpos << std::endl;
 }
 
 //
@@ -666,11 +757,11 @@ void Track::printMatrix(const TMatrixT<double>& matrix) const {
     std::cout << "(";
     for (int j=0; j<nCols;j++) {
 
-      std::cout << " " << std::fixed << std::setprecision(5) << matrix(i,j);
+      std::cout << " " << std::showpos << std::scientific << std::setprecision(5) << matrix(i,j);
     }
     std::cout << ")" << std::endl;
   }
-  std::cout << std::endl;
+  std::cout << std::fixed << std::noshowpos << std::endl;
 }
 
 //
@@ -683,9 +774,9 @@ void Track::printHits() const {
 
   for (const auto& it : m_hits) {
     std::cout << "    Hit";
-    if (it->isActive())   std::cout << " r="  << it->getRPos() << " +- " << it->getResolutionRphi(getRadius(it->getZPos()));
+    if (it->isActive())   std::cout << " r="  << it->getRPos() << " +- " << it->getRphiResolution(getRadius(it->getZPos()));
     else                  std::cout << " r="  << it->getRPos();
-    if (it->isActive())   std::cout << " z="  << it->getZPos() << " +- " << it->getResolutionZ(getRadius(it->getZPos()));
+    if (it->isActive())   std::cout << " z="  << it->getZPos() << " +- " << it->getZResolution(getRadius(it->getZPos()));
     else                  std::cout << " z="  << it->getZPos();
     std::cout << " d="  << it->getDistance()
               << " rl=" << it->getCorrectedMaterial().radiation
@@ -699,7 +790,7 @@ void Track::printHits() const {
     if (it->getLayerOrDiscID()!=-1) std::cout << " " << it->getDetName() << " L/D_id= " << it->getLayerOrDiscID();
 
     if (it->isActive()) {
-      std::cout << " activeHitType_=" << static_cast<short>(it->getActiveHitType());
+      std::cout << " hitModuleType_=" << static_cast<short>(it->getHitModuleType());
     }
     std::cout << std::endl;
   }
@@ -717,8 +808,8 @@ void Track::printActiveHits() const {
     if (it->isActive()) {
 
       std::cout << "    Hit";
-      std::cout << " r="  << it->getRPos() << " +- " << it->getResolutionRphi(getRadius(it->getZPos()));
-      std::cout << " z="  << it->getZPos() << " +- " << it->getResolutionZ(getRadius(it->getZPos()));
+      std::cout << " r="  << it->getRPos() << " +- " << it->getRphiResolution(getRadius(it->getZPos()));
+      std::cout << " z="  << it->getZPos() << " +- " << it->getZResolution(getRadius(it->getZPos()));
       std::cout << " d="  << it->getDistance()
                 << " rl=" << it->getCorrectedMaterial().radiation
                 << " il=" << it->getCorrectedMaterial().interaction;
@@ -729,7 +820,7 @@ void Track::printActiveHits() const {
       if (it->isBeamPipe()) std::cout << " beam-pipe";
       if (it->isIP())       std::cout << " ip";
       if (it->getLayerOrDiscID()!=-1) std::cout << " " << it->getDetName() << " L/D_id= " << it->getLayerOrDiscID();
-      std::cout << " activeHitType_=" << static_cast<short>(it->getActiveHitType());
+      std::cout << " hitModuleType_=" << static_cast<short>(it->getHitModuleType());
       std::cout << std::endl;
     }
   }
@@ -967,9 +1058,9 @@ RILength Track::getMaterial() const {
 //
 // Get a vector of pairs: Detector module & hit type for Trigger hits
 //
-std::vector<std::pair<const DetectorModule*, HitType>> Track::getHitModules() const {
+std::vector<std::pair<const DetectorModule*, HitModuleType>> Track::getHitModules() const {
 
-  std::vector<std::pair<const DetectorModule*, HitType>> result;
+  std::vector<std::pair<const DetectorModule*, HitModuleType>> result;
 
   for (auto& iHit : m_hits) {
 
@@ -978,7 +1069,7 @@ std::vector<std::pair<const DetectorModule*, HitType>> Track::getHitModules() co
       // We've got a possible trigger here
       // Let's find the corresponding module
       const DetectorModule* myModule = iHit->getHitModule();
-      if (myModule) result.push_back(std::make_pair(myModule, iHit->getActiveHitType()));
+      if (myModule) result.push_back(std::make_pair(myModule, iHit->getHitModuleType()));
       else {
         // Whoops: problem here: an active hit is not linked to any module
         logERROR("Track::getHitModules: This SHOULD NOT happen. In expectedTriggerPoints() an active hit does not correspond to any module!");
@@ -989,17 +1080,40 @@ std::vector<std::pair<const DetectorModule*, HitType>> Track::getHitModules() co
 }
 
 //
-// Compute 3x3 covariance matrix of the track parameters in R-Phi projection, using NxN (N hits = K+L: K active hits on detectors + L passive (artificial) hits due to material)
-// Ref. point dictates, whether Multiple scattering effects need to be calculated inside-out or outside-in. MS effect is symmetric as regards track fitting. PropagOutIn variable
-// defines whether detectors at higher R than the ref. point (true) should be used for error calculation/propagation (e.g. d0,z0) or whether detectors at lower R (false).
-// Return true if V invertable
+// Main method calculating track parameters in both r-phi & s-z planes, using linear fit with parameters: 1/R, d0, phi0, cotg(theta) & z0. Within the calculation an NxN variance
+// matrix is used (N hits = K+L: K active hits on detectors + L passive (artificial) hits due to material). Ref. point dictates, whether Multiple scattering effects need to be
+// calculated inside-out or outside-in. MS effect is symmetric as regards track fitting. PropagOutIn variable defines whether detectors at higher R than the ref. point (true)
+// should be used for error calculation/propagation (e.g. d0,z0) or whether detectors at lower R (false). E.g. for standard estimation of D0,Z0 parameters one calculates MS
+// inside->out from rPos=0 (zPos can be calculated from rPos using theta).
+// Return true if covariance matrix correctly calculated
 //
-bool Track::computeCovarianceMatrixRPhi(double refPointRPos, bool propagOutIn) {
+bool Track::computeCovarianceMatrix(double refPointRPos, bool propagOutIn) {
 
-  // Matrix size
+  // Sort hits based on particle direction: in-out or out-in (if needed)
+  if (m_reSortHits) {
+
+    bool bySmallerRadius = true;
+    if (m_pt>=0) sortHits(bySmallerRadius);
+    else         sortHits(!bySmallerRadius);
+    m_reSortHits = false;
+  }
+
+  m_refPointRPosCache = refPointRPos;
+  m_propagOutInCache  = propagOutIn;
+
+  // Variance matrices size
   int nHits = m_hits.size();
-  m_varMatrixRPhi.ResizeTo(nHits,nHits);
-  m_varMatrixRPhi.Zero();
+
+  TMatrixTSym<double> varMatrixRR;
+  TMatrixTSym<double> varMatrixRZ;
+  TMatrixTSym<double> varMatrixZR;
+  TMatrixTSym<double> varMatrixZZ;
+  TMatrixTSym<double> varMatrixFull;
+
+  varMatrixRR.ResizeTo(nHits,nHits);
+  varMatrixRZ.ResizeTo(nHits,nHits);
+  varMatrixZR.ResizeTo(nHits,nHits);
+  varMatrixZZ.ResizeTo(nHits,nHits);
 
   //
   // Find hit index ranges relevant for MS effects calculation based on requirements on refPoint & propagation direction
@@ -1039,93 +1153,150 @@ bool Track::computeCovarianceMatrixRPhi(double refPointRPos, bool propagOutIn) {
   // TODO: Implement
   else {
 
-    logWARNING("Variance matrix V(NxN) in R-Phi -> calculations of particle traversing outside-in not yet implemented.");
+    logWARNING("Variance matrix V(NxN) -> calculations of particle traversing outside-in not yet implemented.");
     if (m_pt>=0 && !propagOutIn) sortHits(bySmallerR); // Important -> resort back
     return false;
   }
 
-  // Check that enough hits for RPhi calculation, i.e. >=3
+  // Check that enough hits for track calculation, i.e. >=3
   nHitsUsed = nHits - iStart;
   if ((nActiveHitsUsed)<3) {
 
-    std::string message = "Variance matrix V(NxN) in R-Phi -> refPointRPos[mm]="+any2str(refPointRPos/Units::mm,1);
+    std::string message = "Variance matrix V(NxN) -> refPointRPos[mm]="+any2str(refPointRPos/Units::mm,1);
                 message+= " in combination with propagator direction doesn't provide sufficient number of hits for tracking!";
     logWARNING(message);
     if (m_pt>=0 && !propagOutIn) sortHits(bySmallerR); // Important -> resort back
     return false;
   }
 
-  // Get contributions from Multiple Couloumb scattering
-  std::vector<double> msThetaOverSinSq;
+  // Pre-compute the squares of the scattering angles projected to the virtual measurement plane
+  std::vector<double> msThetaSqProj;
 
   for (int i=iStart; i<iEnd; i++) {
 
     // MS theta
-    double msTheta = 0.0;
+    double msThetaSq = 0.0;
 
-    // Material in terms of rad. lengths
-    double XtoX0 = m_hits.at(i)->getCorrectedMaterial().radiation;
-    //std::cout << std::fixed << std::setprecision(4) << "Material (" << i << ") = " << XtoX0 << "\t at r=" << m_hits.at(i)->getRadius(m_hits.at(i)->getZPos()) << "\t of type=" << m_hits.at(i)->getObjectKind() << std::endl;
+    // Material in terms of rad. lengths -> corrected by 1/cos(phi/2-phi0), i.e. by true material crossed, unless parabolic approximation required
+    // Correction to 1/sin(theta) for BRL or 1/cos(theta) for ECAP already applied by getCorrectedMaterial() function
+    double XtoX0 = m_hits[i]->getCorrectedMaterial().radiation;
+
+    // Correct crossed material accounting circular shape (in non-parabolic approximation)
+    if (!(SimParms::getInstance().useParabolicApprox())) XtoX0 *= 1./m_hits[i]->getCosBeta();
 
     if (XtoX0>0) {
 
-      // MS error depends on path length = deltaR/sin(theta), so one can precalculate msTheta_real as msTheta/sin^2(theta), which practically means using pT
-      // instead of p & then one has to multiply the msTheta by deltaR to get MS error
-      msTheta = (13.6*Units::MeV * 13.6*Units::MeV) / (m_pt/Units::MeV * m_pt/Units::MeV) * XtoX0 * (1 + 0.038 * log(XtoX0)) * (1 + 0.038 * log(XtoX0));
-
-      // Take into account a propagation of MS error on virtual barrel plane, on which all measurements are evaluated for consistency (global chi2 fit applied) ->
-      // in limit R->inf. propagation along line used, otherwise a very small correction factor coming from the circular shape of particle track is required (similar
-      // approach as for local resolutions)
-      // TODO: Currently, correction mathematicaly derived only for use case of const magnetic field -> more complex mathematical expression expected in non-const B field
-      // (hence correction not applied in such case)
-      double A = 0;
-      if (SimParms::getInstance().isMagFieldConst()) A = m_hits.at(i)->getRPos()/2./getRadius(m_hits.at(i)->getZPos());     // r_i/2R
-      double corrFactor = 1 + A*A*cos(m_theta)*cos(m_theta)/(1-A*A);
-
-      msTheta *= corrFactor;
+      // Comment (see further in code): MS error depends on total path, i.e. projected path in XY plane scales like 1/sin^2(theta)
+      msThetaSq = (13.6*Units::MeV * 13.6*Units::MeV) / (m_p/Units::MeV * m_p/Units::MeV) * XtoX0 * (1 + 0.038 * log(XtoX0)) * (1 + 0.038 * log(XtoX0));
     }
     else {
-      msTheta = 0;
+      msThetaSq = 0;
     }
-    msThetaOverSinSq.push_back(msTheta);
+    msThetaSqProj.push_back(msThetaSq);
   }
 
   //
   // Calculate the variance matrix with all correlation terms: c is column, r is row (hits are assumed to be sorted)
   for (int c=iStart ; c<=iEnd; c++) {
 
+    double beta_c       = m_hits[c]->getBeta();
+    double sinBeta_c    = m_hits[c]->getSinBeta();
+    double cosBeta_c    = m_hits[c]->getCosBeta();
+    double rPos_c       = m_hits[c]->getRPos();
+    double rPhiLength_c = m_hits[c]->getRPhiLength();
+    double rPosSq_c     = rPos_c*rPos_c;
+
     // Dummy value for correlations involving inactive surfaces
-    if (m_hits.at(c)->isPassive()) {
-      for (int r = 0; r <= c; r++) m_varMatrixRPhi(r, c) = 0.0;
+    if (m_hits[c]->isPassive()) {
+      for (int r = 0; r <= c; r++) {
+
+        varMatrixRR(r, c) = 0.0;
+        varMatrixRZ(r, c) = 0.0;
+        varMatrixZR(r, c) = 0.0;
+        varMatrixZZ(r, c) = 0.0;
+      }
     }
     // One of the correlation factors refers to an active surface
     else {
 
       for (int r=iStart; r <= c; r++) {
+
         // Dummy value for correlation involving an inactive surface
-        if (m_hits.at(r)->isPassive()) m_varMatrixRPhi(r, c) = 0.0;
+        if (m_hits[r]->isPassive()) {
+
+          varMatrixRR(r, c) = 0.0;
+          varMatrixRZ(r, c) = 0.0;
+          varMatrixZR(r, c) = 0.0;
+          varMatrixZZ(r, c) = 0.0;
+        }
 
         // Correlations between two active surfaces
         else {
 
-          double sum = 0.0;
+          double sumRR        = 0.0;
+          double sumRZ        = 0.0;
+          double sumZR        = 0.0;
+          double sumZZ        = 0.0;
+
+          double beta_r       = m_hits[r]->getBeta();
+          double sinBeta_r    = m_hits[r]->getSinBeta();
+          double cosBeta_r    = m_hits[r]->getCosBeta();
+          double rPos_r       = m_hits[r]->getRPos();
+          double rPhiLength_r = m_hits[r]->getRPhiLength();
+          double rPosSq_r     = rPos_r*rPos_r;
 
           for (int i=iStart; i<r; i++) {
 
-            sum += msThetaOverSinSq.at(i-(nHits-nHitsUsed))
-                   * (m_hits.at(c)->getRPos() - m_hits.at(i)->getRPos())
-                   * (m_hits.at(r)->getRPos() - m_hits.at(i)->getRPos());
+            double beta_i       = m_hits[i]->getBeta();
+            double sinBeta_i    = m_hits[i]->getSinBeta();
+            double cosBeta_i    = m_hits[i]->getCosBeta();
+            double rPos_i       = m_hits[i]->getRPos();
+            double rPhiLength_i = m_hits[i]->getRPhiLength();
+            double rPosSq_i     = rPos_i*rPos_i;
 
+            if (SimParms::getInstance().useParabolicApprox()) {
+
+              sumRR += msThetaSqProj[i-(nHits-nHitsUsed)] * (rPos_c-rPos_i) * (rPos_r-rPos_i) /sin(m_theta)/sin(m_theta);                           // Correction to path length
+              sumZZ += msThetaSqProj[i-(nHits-nHitsUsed)] * (rPos_c-rPos_i) * (rPos_r-rPos_i) /sin(m_theta)/sin(m_theta)/sin(m_theta)/sin(m_theta); // Correction to path length + error propagation to barrel virtual plane
+            }
+            else {
+
+              double trackR = getRadius(0.);
+
+              double beta_ci = beta_c - beta_i;
+              double beta_ri = beta_r - beta_i;
+              double rPos_ci = rPos_c/sinBeta_c*sin(beta_ci);
+              double rPos_ri = rPos_r/sinBeta_r*sin(beta_ri);
+
+              sumRR += msThetaSqProj[i-(nHits-nHitsUsed)] * rPos_ci * cos(beta_ci)     // Project MS in XY plane in direction of curvature @ rPos_c (all with respect to rPos_i)
+                                                          * rPos_ri * cos(beta_ri)     // Project MS in XY plane in direction of curvature @ rPos_r (all with respect to rPos_i)
+                                                          / sin(m_theta)/sin(m_theta); // MS increases with path length -> projection to XY plane ~1/sin^2(theta)
+
+              sumZZ += msThetaSqProj[i-(nHits-nHitsUsed)] * ( (rPhiLength_c-rPhiLength_i) )
+                                                          * ( (rPhiLength_r-rPhiLength_i) )
+                                                          / sin(m_theta)/sin(m_theta)/sin(m_theta)/sin(m_theta); // MS increases with path length ~1/sin^2(theta) x error propagation to barrel virtual plane ~1/sin^2(theta);
+
+            }
           }
           if (r == c) {
 
-            double prec = m_hits.at(r)->getResolutionRphi(getRadius(m_hits.at(r)->getZPos()));
-            //std::cout << ">>> " << sqrt(sum) << " " << prec << std::endl;
-            sum = sum + prec * prec;
+            double resRPhi = 0;
+            double resZ    = 0;
+            resRPhi = m_hits[r]->getRphiResolution(getRadius(m_hits[r]->getZPos()));
+            resZ    = m_hits[r]->getZResolution(getRadius(m_hits[r]->getZPos()));
+
+            sumRR = sumRR + resRPhi*resRPhi;
+            sumZZ = sumZZ + resZ*resZ;
 
           }
-          m_varMatrixRPhi(r, c) = sum;
-          if (r != c) m_varMatrixRPhi(c, r) = sum;
+          varMatrixRR(r, c) = sumRR;
+          if (r != c) varMatrixRR(c, r) = sumRR;
+          varMatrixRZ(r, c) = sumRZ;
+          if (r != c) varMatrixRZ(c, r) = sumZR;
+          varMatrixZR(r, c) = sumZR;
+          if (r != c) varMatrixZR(c, r) = sumRZ;
+          varMatrixZZ(r, c) = sumZZ;
+          if (r != c) varMatrixZZ(c, r) = sumZZ;
         }
       }
     }
@@ -1133,7 +1304,9 @@ bool Track::computeCovarianceMatrixRPhi(double refPointRPos, bool propagOutIn) {
 
   // Print variance matrix
   //std::cout << "Variance matrix in R-Phi (with zero cols/rows): " << std::endl;
-  //printSymMatrix(m_varMatrixRPhi);
+  //printSymMatrix(varMatrixRR);
+  //std::cout << "Variance matrix in S-Z (with zero cols/rows): " << std::endl;
+  //printSymMatrix(varMatrixZZ);
 
   //
   // Remove zero rows and columns in covariance matrix
@@ -1143,311 +1316,187 @@ bool Track::computeCovarianceMatrixRPhi(double refPointRPos, bool propagOutIn) {
   for (int r=0; r<nHits; r++) {
 
     // Keep actual row @ zero for first N passive (zero) layers
-    if ((m_hits.at(r)->isPassive() || r<iStart) && (!lookForActive)) {
+    if ((m_hits[r]->isPassive() || r<iStart) && (!lookForActive)) {
 
       // Next hit has to be active (set as active and considered in track fitting (see iStart))
-      if ((r+1)<nHits && m_hits.at(r+1)->isActive() && (r+1)>=iStart) lookForActive = true;
+      if ((r+1)<nHits && m_hits[r+1]->isActive() && (r+1)>=iStart) lookForActive = true;
 
       // Previous hit has to be passive or not being considered in track fitting (see iStart))
-      if (!((r-1)>=0 && (m_hits.at(r-1)->isPassive() || (r-1)<iStart)) ) rActual = r;
+      if (!((r-1)>=0 && (m_hits[r-1]->isPassive() || (r-1)<iStart)) ) rActual = r;
     }
     // Shift active layer to zero-th row + i active layers, which have already been shifted by number of zero layers
-    else if ((m_hits.at(r)->isActive()) && (lookForActive)) {
+    else if ((m_hits[r]->isActive()) && (lookForActive)) {
       for (int c=0; c<nHits; c++) {
-        m_varMatrixRPhi(rActual, c) = m_varMatrixRPhi(r, c);
-        m_varMatrixRPhi(c, rActual) = m_varMatrixRPhi(c, r);
+
+        varMatrixRR(rActual, c) = varMatrixRR(r, c);
+        varMatrixRR(c, rActual) = varMatrixRR(c, r);
+
+        varMatrixRZ(rActual, c) = varMatrixRZ(r, c);
+        varMatrixRZ(c, rActual) = varMatrixRZ(c, r);
+
+        varMatrixZR(rActual, c) = varMatrixZR(r, c);
+        varMatrixZR(c, rActual) = varMatrixZR(c, r);
+
+        varMatrixZZ(rActual, c) = varMatrixZZ(r, c);
+        varMatrixZZ(c, rActual) = varMatrixZZ(c, r);
       }
 
-      m_varMatrixRPhi(rActual, rActual) = m_varMatrixRPhi(r, r);
+      varMatrixRR(rActual, rActual) = varMatrixRR(r, r);
+      varMatrixRZ(rActual, rActual) = varMatrixRZ(r, r);
+      varMatrixZR(rActual, rActual) = varMatrixZR(r, r);
+      varMatrixZZ(rActual, rActual) = varMatrixZZ(r, r);
+
       rActual++;
     }
   }
   // If some rows/colums were zero -> matrix rank needs to be adjusted
-  int nResized = rActual;
-  if (nResized!=0) m_varMatrixRPhi.ResizeTo(nResized, nResized);
+  int nDim = rActual;
+  if (nDim!=0) {
+
+    varMatrixRR.ResizeTo(nDim, nDim);
+    varMatrixRZ.ResizeTo(nDim, nDim);
+    varMatrixZR.ResizeTo(nDim, nDim);
+    varMatrixZZ.ResizeTo(nDim, nDim);
+  }
+
+  varMatrixFull.ResizeTo(2*nDim, 2*nDim);
+  for (int iRow=0; iRow<nDim; iRow++) {
+    for (int iCol=0; iCol<nDim; iCol++) {
+
+      varMatrixFull(iRow     , iCol)      = varMatrixRR(iRow, iCol);
+      varMatrixFull(iRow+nDim, iCol)      = varMatrixRZ(iRow, iCol);
+      varMatrixFull(iRow     , iCol+nDim) = varMatrixZR(iRow, iCol);
+      varMatrixFull(iRow+nDim, iCol+nDim) = varMatrixZZ(iRow, iCol);
+
+    }
+  }
 
   // Print variance matrix
   //std::cout << "Variance matrix in R-Phi: " << std::endl;
-  //printSymMatrix(m_varMatrixRPhi);
+  //printSymMatrix(varMatrixRR);
+  //std::cout << "Variance matrix in S-Z: " << std::endl;
+  //printSymMatrix(varMatrixZZ);
+  //std::cout << "Variance matrix in R-Z: " << std::endl;
+  //printSymMatrix(varMatrixRZ);
+  //std::cout << "Variance matrix in Z-R: " << std::endl;
+  //printSymMatrix(varMatrixZR);
+  //std::cout << "Full matrix: " << std::endl;
+  //printSymMatrix(varMatrixFull);
+  //std::cout << "Det: " << std::scientific << varMatrixFull.Determinant() << std::fixed << std::endl;
 
   // Check if matrix is sane and worth keeping
-  if (!((m_varMatrixRPhi.GetNoElements() > 0) && (m_varMatrixRPhi.Determinant() != 0.0))) {
-    logWARNING("Variance matrix V(NxN) in R-Phi -> zero determinat or zero number of elements");
+  if (!((varMatrixRR.GetNoElements() > 0) && (varMatrixRR.Determinant() != 0.0))) {
+    logWARNING("Variance matrix Vrr(NxN) -> zero determinat or zero number of elements");
+    if (m_pt>=0 && !propagOutIn) sortHits(bySmallerR); //  Important -> resort back
+    return false;
+  }
+  if (!((varMatrixZZ.GetNoElements() > 0) && (varMatrixZZ.Determinant() != 0.0))) {
+    logWARNING("Variance matrix Vzz(NxN) -> zero determinat or zero number of elements");
     if (m_pt>=0 && !propagOutIn) sortHits(bySmallerR); //  Important -> resort back
     return false;
   }
 
   //
-  // Compute 3x3 covariance matrix of the track parameters in R-Phi projection
+  // Compute covariance matrix of the track parameters
   unsigned int offset = iStart;
 
-  int n = m_varMatrixRPhi.GetNrows();
+  // Get inverse of variance (measurement) matrices (r-phi versus s-z are assumed not to be correlated)
+  TMatrixT<double> VRPhiInv(varMatrixRR);   // Local copy of R-Phi variance matrix to be inverted
+  VRPhiInv.Invert();
+  TMatrixT<double> VSZInv(varMatrixZZ);     // Local copy of S-Z variance matrix to be inverted
+  VSZInv.Invert();
+  TMatrixT<double> VFullInv(varMatrixFull); // Local copy of full variance matrix to be inverted
+  VFullInv.Invert();
 
-  TMatrixT<double> V(m_varMatrixRPhi); // Local copy to be inverted
-  TMatrixT<double> diffsT(3, n);       // Derivatives of track parameters transposed (in R-Phi -> 3 track parameters)
-  TMatrixT<double> diffs(n, 3);        // Derivatives of track parameters (in R-Phi -> 3 track parameters)
+  // Derivative matrices 3x3 (R-Phi only), 2x2 (S-Z only), 5x5 (full matrix)
+  TMatrixT<double> diffAT(3, nDim);      // Derivatives of track parameters transposed (in R-Phi -> 3 track parameters)
+  TMatrixT<double> diffA(nDim, 3);       // Derivatives of track parameters (in R-Phi -> 3 track parameters)
 
-  m_covMatrixRPhi.ResizeTo(3, 3);
+  TMatrixT<double> diffBT(2, nDim);      // Derivatives of track parameters transposed (in R-Phi -> 3 track parameters)
+  TMatrixT<double> diffB(nDim, 2);       // Derivatives of track parameters (in R-Phi -> 3 track parameters)
 
-  // Set up partial derivative matrices diffs and diffsT -> using Karimaki approach & parabolic aproximations to define these matrices
+  TMatrixT<double> diffFullT(5, 2*nDim); // Derivatives of track parameters (transposed) in full representation (R-Phi equation)
+  TMatrixT<double> diffFull(2*nDim, 5);  // Derivatives of track parameters in full representation (R-Phi equation)
+
   for (auto i=iStart; i<=iEnd; i++) {
 
-    if (m_hits.at(i)->isActive()) {
-      diffs(i - offset, 0) = computeDfOverDRho(m_hits.at(i)->getRPos(),m_hits.at(i)->getZPos());
-      diffs(i - offset, 1) = +m_hits.at(i)->getRPos(); // No impact of sign on results, but from analytical derivation point of view correct with a plus sign!!! Was minus sign here!!!
-      diffs(i - offset, 2) = 1;
+    if (m_hits[i]->isActive()) {
+
+      double hitRPos    = m_hits[i]->getRPos();
+      double hitZPos    = m_hits[i]->getZPos();
+
+      if (SimParms::getInstance().useParabolicApprox()) {
+
+        diffA(i - offset, 0) = computeDfOverDRho(hitRPos, hitZPos);
+        diffA(i - offset, 1) = m_hits[i]->getRPos();
+        diffA(i - offset, 2) = 1;
+
+        diffB(i - offset, 0) = m_hits[i]->getRPos();
+        diffB(i - offset, 1) = 1;
+      }
+      else {
+
+        diffA(i - offset, 0) = computeDfOverDRho(hitRPos, hitZPos);
+        diffA(i - offset, 1) = m_hits[i]->getXPos();
+        diffA(i - offset, 2) = 1;
+
+        diffFull(i - offset, 0) = computeDfOverDRho(hitRPos, hitZPos);
+        diffFull(i - offset, 1) = m_hits[i]->getXPos();
+        diffFull(i - offset, 2) = 1;
+        diffFull(i - offset, 3) = 0;
+        diffFull(i - offset, 4) = 0;
+
+        diffB(i - offset, 0) = m_hits[i]->getRPhiLength();
+        diffB(i - offset, 1) = 1;
+
+
+        diffFull(i - offset+nDim, 0) = 0;
+        diffFull(i - offset+nDim, 1) = 0;
+        diffFull(i - offset+nDim, 2) = 0;
+        diffFull(i - offset+nDim, 3) = m_hits[i]->getRPhiLength();
+        diffFull(i - offset+nDim, 4) = 1;
+      }
     }
     else offset++;
   }
 
   // Transpose
-  diffsT.Transpose(diffs);
+  diffAT.Transpose(diffA);
+  diffBT.Transpose(diffB);
+  diffFullT.Transpose(diffFull);
 
-  // Print A matrix
-  //std::cout << "A matrix in R-Phi: " << std::endl;
-  //printMatrix(diffs);
+  // Print A, B matrices
+  //std::cout << "DiffA matrix in R-Phi: " << std::endl;
+  //printMatrix(diffA);
+  //std::cout << "DiffB matrix in S-Z: " << std::endl;
+  //printMatrix(diffB);
+  //std::cout << "DiffFull matrix: " << std::endl;
+  //printMatrix(diffFull);
 
   // Get covariance matrix using global chi2 fit: C = cov(i,j) = (D^T * V^-1 * D)^-1
-  m_covMatrixRPhi = diffsT * V.Invert() * diffs;
+  m_covMatrixRPhi.ResizeTo(3,3);
+  m_covMatrixRPhi = diffAT * VRPhiInv * diffA;
   m_covMatrixRPhi.Invert();
 
-  // Sort-back hits based on particle direction if they were resorted
-  if (m_pt>=0 && !propagOutIn) sortHits(bySmallerR);
-
-  return true;
-}
-
-//
-// Compute 2x2 covariance matrix of track parameters in R-Z (s-z), using the NxN variance matrix (N hits = K+L: K active hits on detectors + L passive (artificial) hits due to material).
-// Ref. point dictates, whether Multiple scattering effects need to be calculated inside-out or outside-in. MS effect is symmetric as regards track fitting. PropagOutIn variable
-// defines whether detectors at higher R than the ref. point (true) should be used for error calculation/propagation (e.g. d0,z0) or whether detectors at lower R (false).
-// Return true if V invertable
-//
-bool Track::computeCovarianceMatrixRZ(double refPointRPos, bool propagOutIn) {
-
-  // Matrix size
-  int nHits = m_hits.size();
-
-  m_varMatrixRZ.ResizeTo(nHits,nHits);
-  m_varMatrixRZ.Zero();
-
-  //
-  // Find hit index ranges relevant for MS effects calculation based on requirements on refPoint & propagation direction
-  int iStart          = nHits;
-  int iEnd            = nHits-1;
-  int nHitsUsed       = 0;
-  int nActiveHitsUsed = 0;
-
-  bool bySmallerR = true;
-  bool useIP      = false;
-
-  // Particle traverses inside-out with error propagation outside-in -> hits already sorted correctlly
-  if (m_pt>=0 && propagOutIn) {
-
-    for (auto it=m_hits.rbegin(); it!=m_hits.rend(); it++) {
-
-      if (refPointRPos<(*it)->getRPos()) {
-        if ((*it)->isMeasurable()) nActiveHitsUsed++;
-        iStart--;
-      }
-      else break;
-    }
-  }
-  // Particle traverses inside-out with error propagation inside-out -> sort hits by higher radius & resort backwards after matrix calculated
-  else if (m_pt>=0 && !propagOutIn) {
-
-    sortHits(!bySmallerR);
-    for (auto it=m_hits.rbegin(); it!=m_hits.rend(); it++) {
-
-      if (refPointRPos>(*it)->getRPos()) {
-        if ((*it)->isMeasurable()) nActiveHitsUsed++;
-        iStart--;
-      }
-      else break;
-    }
-  }
-  // TODO: Implement
-  else {
-
-    logWARNING("Variance matrix V(NxN) in R-Z (s-Z) -> calculations of particle traversing outside-in not yet implemented.");
-    if (m_pt>=0 && !propagOutIn) sortHits(bySmallerR); // Important -> resort back!
-    return false;
-  }
-
-  // Check that enough hits for RZ calculation, i.e. >=2
-  nHitsUsed = nHits - iStart;
-  if ((nActiveHitsUsed)<2) {
-
-    std::string message = "Variance matrix V(NxN) in R-Z (s-Z) -> refPointRPos[mm]="+any2str(refPointRPos/Units::mm,1);
-                message+= " in combination with propagator direction doesn't provide sufficient number of hits for tracking!";
-    logWARNING(message);
-    if (m_pt>=0 && !propagOutIn) sortHits(bySmallerR); // Important -> resort back!
-    return false;
-  }
-
-  // Pre-compute the squares of the scattering angles
-  // already divided by sin^2 (that is : we should use p instead of p_T here
-  // but the result for theta^2 differ by a factor 1/sin^2, which is exactly the
-  // needed factor to project the scattering angle on an horizontal surface
-  std::vector<double> msThetaOverSinSq;
-
-  for (int i=iStart; i<iEnd; i++) {
-
-    // MS theta
-    double msTheta = 0.0;
-
-    // Material in terms of rad. lengths
-    double XtoX0 = m_hits.at(i)->getCorrectedMaterial().radiation;
-
-    if (XtoX0>0) {
-      // MS error depends on path length = deltaR/sin(theta), so one can precalculate msTheta_real as msTheta/sin^2(theta), which practically means using pT
-      // instead of p & then one has to multiply the msTheta by deltaR to get MS error
-      msTheta = (13.6*Units::MeV * 13.6*Units::MeV) / (m_pt/Units::MeV * m_pt/Units::MeV) * XtoX0 * (1 + 0.038 * log(XtoX0)) * (1 + 0.038 * log(XtoX0));
-
-      // Take into account a propagation of MS error on virtual barrel plane, on which all measurements are evaluated for consistency (global chi2 fit applied) ->
-      // in limit R->inf. propagation along line used, otherwise a very small correction factor coming from the circular shape of particle track is required (similar
-      // approach as for local resolutions)
-      // TODO: Currently, correction mathematicaly derived only for use case of const magnetic field -> more complex mathematical expression expected in non-const B field
-      // (hence correction not applied in such case)
-      double A = 0;
-      if (SimParms::getInstance().isMagFieldConst()) A = m_hits.at(i)->getRPos()/2./getRadius(m_hits.at(i)->getZPos());  // r_i/2R
-      double corrFactor = pow( cos(m_theta)*cos(m_theta)/sin(m_theta)/sqrt(1-A*A) + sin(m_theta) ,2); // Without correction it would be 1/sin(theta)^2
-
-      msTheta *=corrFactor;
-    }
-    else {
-      msTheta = 0;
-    }
-    msThetaOverSinSq.push_back(msTheta);
-  }
-
-  //
-  // Calculate the variance matrix with all correlation terms: c is column, r is row (hits are assumed to be sorted)
-  for (int c=iStart ; c<=iEnd; c++) {
-
-    // Dummy value for correlations involving inactive surfaces
-    if (m_hits.at(c)->isPassive()) {
-      for (int r=0; r<=c; r++) m_varMatrixRZ(r, c) = 0.0;
-    }
-    // One of the correlation factors refers to an active surface
-    else {
-
-      for (int r=iStart; r<=c; r++) {
-        // Dummy value for correlation involving an inactive surface
-        if (m_hits.at(r)->isPassive()) m_varMatrixRZ(r, c) = 0.0;
-
-        // Correlations between two active surfaces
-        else {
-
-          double sum = 0.0;
-
-          for (int i=iStart; i<r; i++) sum += msThetaOverSinSq.at(i-(nHits-nHitsUsed))
-                                            * (m_hits.at(c)->getRPos() - m_hits.at(i)->getRPos())
-                                            * (m_hits.at(r)->getRPos() - m_hits.at(i)->getRPos());
-
-          if (r == c) {
-            double prec = m_hits.at(r)->getResolutionZ(getRadius(m_hits.at(r)->getZPos()));
-            sum = sum + prec * prec;
-          }
-
-          m_varMatrixRZ(r, c) = sum;
-          if (r != c) m_varMatrixRZ(c, r) = sum;
-#undef CORRELATIONS_OFF_DEBUG
-#ifdef CORRELATIONS_OFF_DEBUG
-          if (r!=c) {
-            m_varMatrixRZ(c, r)=0;
-            m_varMatrixRZ(r, c)=0;
-          }
-#endif
-        }
-      }
-    }
-  } // Calculate correlation terms: c is column, r is row
-
-  // Print variance matrix
-  //std::cout << "Variance matrix in R-Z (with zero cols/rows): " << std::endl;
-  //printSymMatrix(m_varMatrixRZ);
-
-  //
-  // Remove zero rows and columns in covariance matrix
-  int  rActual = -1;          // Row, at which to move the active row due to a sequence of zero rows or inactive hits inbetween
-  bool lookForActive = false; // Start looking for shift of active rows, after first passive row found
-
-  for (int r=0; r<nHits; r++) {
-
-    // Keep actual row @ zero for first N passive (zero) layers
-    if ((m_hits.at(r)->isPassive() || r<iStart) && (!lookForActive)) {
-
-      // Next hit has to be active (set as active and considered in track fitting (see iStart))
-      if ((r+1)<nHits && m_hits.at(r+1)->isActive() && (r+1)>=iStart) lookForActive = true;
-
-      // Previous hit has to be passive or not being considered in track fitting (see iStart))
-      if (!((r-1)>=0 && (m_hits.at(r-1)->isPassive() || (r-1)<iStart)) ) rActual = r;
-    }
-    // Shift active layer to zero-th row + i active layers, which have already been shifted by number of zero layers
-    else if ((m_hits.at(r)->isActive()) && (lookForActive)) {
-      for (int c=0; c<nHits; c++) {
-        m_varMatrixRZ(rActual, c) = m_varMatrixRZ(r, c);
-        m_varMatrixRZ(c, rActual) = m_varMatrixRZ(c, r);
-      }
-
-      m_varMatrixRZ(rActual, rActual) = m_varMatrixRZ(r, r);
-      rActual++;
-    }
-  }
-  // If some rows/colums were zero -> matrix rank needs to be adjusted
-  int nResized = rActual;
-  if (nResized!=0) m_varMatrixRZ.ResizeTo(nResized, nResized);
-
-  // Print variance matrix
-  //std::cout << "Variance matrix in R-Z: " << std::endl;
-  //printSymMatrix(m_varMatrixRZ);
-
-  // Check if matrix is sane and worth keeping
-  if (!((m_varMatrixRZ.GetNoElements() > 0) && (m_varMatrixRZ.Determinant() != 0.0))) {
-    logWARNING("Variance matrix V(NxN) in R-Z (s-Z) -> zero determinat or zero number of elements");
-    if (m_pt>=0 && !propagOutIn) sortHits(bySmallerR); // Important - resort back!
-    return false;
-  }
-
-  //
-  // Compute 2x2 covariance matrix of the track parameters in R-Z (s-Z) projection
-  unsigned int offset       = iStart;
-  unsigned int varMatrixDim = m_varMatrixRZ.GetNrows();
-
-  TMatrixT<double> V(m_varMatrixRZ);        // Local copy to be inverted
-  TMatrixT<double> diffsT(2, varMatrixDim); // Derivatives of track parameters transposed (in R-Z -> 2 track parameters)
-  TMatrixT<double> diffs(varMatrixDim, 2);  // Derivatives of track parameters (in R-Z -> 2 track parameters)
-
   m_covMatrixRZ.ResizeTo(2,2);
-
-  // Set up partial derivative matrices diffs and diffsT -> line fit in s-Z to define these matrices
-  for (auto i=iStart; i<=iEnd; i++) {
-
-    if (m_hits.at(i)->isActive()) {
-
-      // Partial derivatives for x = p[0] * y + p[1]
-      diffs(i - offset, 0) = m_hits.at(i)->getRPos();
-      diffs(i - offset, 1) = 1;
-    }
-    else offset++;
-  }
-
-  // Transpose
-  diffsT.Transpose(diffs);
-
-  // Print
-  //std::cout << "Diff matrix in R-Z: " << std::endl;
-  //printMatrix(diffsT);
-
-  // Get covariance matrix using global chi2 fit: C = cov(i,j) = (D^T * V^-1 * D)^-1
-  m_covMatrixRZ = diffsT * V.Invert() * diffs;
+  m_covMatrixRZ = diffBT * VSZInv * diffB;
   m_covMatrixRZ.Invert();
 
+  if (!SimParms::getInstance().useParabolicApprox()) {
+
+    m_covMatrixFull.ResizeTo(5,5);
+    m_covMatrixFull = diffFullT * VFullInv * diffFull;
+    m_covMatrixFull.Invert();
+  }
+
+  //std::cout << "Full covariance matrix: " << std::endl;
+  //printMatrix(m_covMatrixFull);
+
   // Sort-back hits based on particle direction if they were resorted
   if (m_pt>=0 && !propagOutIn) sortHits(bySmallerR);
 
-  return true;
+  m_covDone = true;
+  return m_covDone;
 }
 
 //
@@ -1519,114 +1568,3 @@ double Track::computeDfOverDRho(double rPos, double zPos) {
 
   return DfOverDRho;
 }
-
-//
-//
-///**
-// * Changes some active hits into inactive
-// * according to the efficiency
-// * @param efficiency the modules active fraction
-// * @param alsoPixel true if the efficiency removal applies to the pixel hits also
-// */
-//void Track::addEfficiency(double efficiency, bool pixel /* = false */ ) {
-//  for (std::vector<Hit*>::iterator it = hitV_.begin(); it!=hitV_.end(); ++it) {
-//    if ((*it)->getObjectKind() == Hit::Active) {
-//      if ((pixel)&&(*it)->isPixel()) {
-//	if ((double(random())/RAND_MAX) > efficiency) { // This hit is LOST
-//	  (*it)->setObjectKind(Hit::Inactive);
-//	}
-//      }
-//      if ((!pixel)&&(!(*it)->isPixel())) {
-//	if ((double(random())/RAND_MAX) > efficiency) { // This hit is LOST
-//	  (*it)->setObjectKind(Hit::Inactive);
-//	}
-//      }
-//    }
-//  }
-//}
-//
-///**
-// * Makes all non-trigger hits inactive
-// */
-//void Track::keepTriggerOnly() {
-//  // int iRemove=0;
-//  for (std::vector<Hit*>::iterator it = hitV_.begin(); it!=hitV_.end(); ++it) {
-//    // if (debugRemoval) std::cerr << "Hit number "
-//    //	                           << iRemove++ << ": ";
-//    // if (debugRemoval) std::cerr << "r = " << (*it)->getRadius((*it)->getZPos()) << ", ";
-//    // if (debugRemoval) std::cerr << "d = " << (*it)->getDistance() << ", ";
-//    if ((*it)->getObjectKind() == Hit::Active) {
-//      // if (debugRemoval) std::cerr << "active ";
-//      if ((*it)->isPixel()) {
-//	// if (debugRemoval) std::cerr << "pixel: removed";
-//	(*it)->setObjectKind(Hit::Inactive);
-//      } else {
-//	DetectorModule* myModule = (*it)->getHitModule();
-//	if (myModule) {
-//	  // if (debugRemoval) std::cerr << "module ";
-//	  if (myModule->sensorLayout() != PT) {
-//	    // if (debugRemoval) std::cerr << "non-pt: removed";
-//	    (*it)->setObjectKind(Hit::Inactive);
-//	  } else {
-//	    // if (debugRemoval) std::cerr << "pt: kept";
-//	  }
-//	} else {
-//	  // if (debugRemoval) std::cerr << "active without module: kept";
-//	}
-//      }
-//    } else {
-//      // if (debugRemoval) std::cerr << "inactive";
-//    }
-//    // if (debugRemoval) std::cerr << std::endl;
-//  }
-//
-//  // debugRemoval=false;
-//}
-//
-//
-//
-//
-///**
-// * Sets all the hits to their trigger resolution
-// */
-//void Track::setTriggerResolution(bool isTrigger) {
-//  Hit* myHit;
-//  for (std::vector<Hit*>::iterator it = hitV_.begin(); it!=hitV_.end(); ++it) {
-//    myHit = (*it);
-//    if (myHit->getObjectKind() == Hit::Active) {
-//       myHit->setTrigger(isTrigger);
-//    }
-//  }
-//}
-//
-//
-//
-//
-//
-//
-//double Track::expectedTriggerPoints(const double& triggerMomentum) const {
-//  std::vector<Hit*>::const_iterator hitIt;
-//  Hit* myHit;
-//  double result=0;
-//
-//  for (hitIt=hitV_.begin();
-//       hitIt!=hitV_.end();
-//       ++hitIt) {
-//    myHit=(*hitIt);
-//    if ((myHit) &&
-//	(myHit->isTrigger()) &&
-//	(!myHit->isIP()) &&
-//	(myHit->getObjectKind()==Hit::Active)) {
-//      // We've got a possible trigger here
-//      // Let's find the corresponding module
-//      DetectorModule* myModule = myHit->getHitModule();
-//      if (myModule) {
-//	result += PtErrorAdapter(*myModule).getTriggerProbability(triggerMomentum);
-//      } else {
-//	// Whoops: problem here: an active hit is not linked to any module
-//	std::cerr << "ERROR: this SHOULD NOT happen. in expectedTriggerPoints() an active hit does not correspond to any module!" << std::endl;
-//      }
-//    }
-//  }
-//  return result;
-//}

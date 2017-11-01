@@ -29,7 +29,7 @@ Color_t Palette::color(const std::string& type) {
       ++iColor;
       found=false;
       for (auto it=colorPickMap.begin(); it!=colorPickMap.end(); ++it) {
-        if (it->first==iColor) {
+        if (it->second==iColor) {
           found = true;
           break;
         }

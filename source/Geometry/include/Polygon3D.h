@@ -267,7 +267,7 @@ protected:
 //!
 //! A triangle: polygon with 3 vertices
 //!
-class Polygon3D<3>;
+template<> class Polygon3D<3>;
 typedef Polygon3D<3> Triangle3D;
 
 template<> class Polygon3D<3> : public AbstractPolygon<3, ROOT::Math::XYZVector, TRandom> {  // a triangle can be defined with more than 3 vertices. no error checking is made, simply the additional vertices besides the 3rd one are ignored

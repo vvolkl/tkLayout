@@ -53,13 +53,21 @@ Hit::~Hit() {}
 Hit::Hit() {
     m_detName          = "Undefined";
     m_distance         = 0;
+    m_A                = 0;
+    m_C                = 1;
+    m_xPos             = 0;
+    m_yPos             = 0;
     m_rPos             = 0;
     m_zPos             = 0;
+    m_beta             = 0;
+    m_rPhiLength       = 0;
+    m_sLength          = 0;
     m_activity         = HitActivity::Undefined;
-    m_activeHitType    = HitType::NONE;
+    m_hitModuleType    = HitModuleType::NONE;
     m_hitModule        = nullptr;
     m_track            = nullptr;
     m_isTrigger        = false;
+    m_activeHitType    = HitActiveType::Undefined;
     m_passiveHitType   = HitPassiveType::Undefined;
     m_hitPassiveElem   = nullptr;
     m_isPixel          = false;
@@ -76,14 +84,22 @@ Hit::Hit() {
 Hit::Hit(const Hit& h) {
     m_detName           = h.m_detName;
     m_distance          = h.m_distance;
+    m_A                 = h.m_A;
+    m_C                 = h.m_C;
+    m_xPos              = h.m_xPos;
+    m_yPos              = h.m_yPos;
     m_rPos              = h.m_rPos;
     m_zPos              = h.m_zPos;
+    m_beta              = h.m_beta;
+    m_rPhiLength        = h.m_rPhiLength;
+    m_sLength           = h.m_sLength;
     m_activity          = h.m_activity;
-    m_activeHitType     = h.m_activeHitType;
+    m_hitModuleType     = h.m_hitModuleType;
     m_hitModule         = h.m_hitModule;
     m_track             = nullptr;
     m_correctedMaterial = h.m_correctedMaterial;
     m_isTrigger         = h.m_isTrigger;
+    m_activeHitType     = h.m_activeHitType;
     m_passiveHitType    = h.m_passiveHitType;
     m_hitPassiveElem    = h.m_hitPassiveElem;
     m_isPixel           = h.m_isPixel;
@@ -99,13 +115,21 @@ Hit::Hit(const Hit& h) {
 Hit::Hit(double rPos, double zPos, const InactiveElement* myPassiveElem, HitPassiveType passiveHitType) {
     m_detName           = "Undefined";
     m_distance          = sqrt(rPos*rPos + zPos*zPos);
+    m_A                 = 0;    // High-momentum limit -> recalculated once known track
+    m_C                 = 1;    // High-momentum limit -> recalculated once known track
+    m_xPos              = rPos; // High-momentum limit -> recalculated once known track
+    m_yPos              = 0;    // High-momentum limit -> recalculated once known track
     m_rPos              = rPos;
     m_zPos              = zPos;
+    m_beta              = 0;    // High-momentum limit -> recalculated once known track
+    m_rPhiLength        = rPos; // High-momentum limit -> recalculated once known track
+    m_sLength           = 0;    // Needs to be recalculated once known track;
     m_activity          = HitActivity::Inactive;
-    m_activeHitType     = HitType::NONE;
+    m_hitModuleType     = HitModuleType::NONE;
     m_hitModule         = nullptr;
     m_track             = nullptr;
     m_isTrigger         = false;
+    m_activeHitType     = HitActiveType::Undefined;
     m_passiveHitType    = passiveHitType;
     setHitPassiveElement(myPassiveElem);
     m_isPixel           = false;
@@ -125,16 +149,26 @@ Hit::Hit(double rPos, double zPos, const InactiveElement* myPassiveElem, HitPass
  * //! Constructor for a hit on a given module at [rPos, zPos] (cylindrical position) from the origin
  * @param myModule pointer to the module with the hit 
  */
-Hit::Hit(double rPos, double zPos, const DetectorModule* myModule, HitType activeHitType) {
+Hit::Hit(double rPos, double zPos, const DetectorModule* myModule, HitModuleType hitModuleType) {
     m_detName          = "Undefined";
     m_distance         = sqrt(rPos*rPos + zPos*zPos);
+    m_A                = 0;    // High-momentum limit -> recalculated once known track
+    m_C                = 1;    // High-momentum limit -> recalculated once known track
+    m_xPos             = rPos; // High-momentum limit -> recalculated once known track
+    m_yPos             = 0;    // High-momentum limit -> recalculated once known track
     m_rPos             = rPos;
     m_zPos             = zPos;
+    m_beta             = 0;    // High-momentum limit -> recalculated once known track
+    m_rPhiLength       = rPos; // High-momentum limit -> recalculated once known track
+    m_sLength          = 0;    // Needs to be recalculated once known track;
     m_activity         = HitActivity::Active;
-    m_activeHitType    = activeHitType;
+    m_hitModuleType    = hitModuleType;
     setHitModule(myModule);
     m_track            = nullptr;
     m_isTrigger        = false;
+    if (myModule->measurementType()==MeasurementType::POSITION)   m_activeHitType    = HitActiveType::Position;
+    if (myModule->measurementType()==MeasurementType::TIME)       m_activeHitType    = HitActiveType::Time;
+    if (myModule->measurementType()==MeasurementType::POSANDTIME) m_activeHitType    = HitActiveType::PosAndTime;
     m_passiveHitType   = HitPassiveType::Undefined;
     m_hitPassiveElem   = nullptr;
     m_isPixel          = false;
@@ -164,6 +198,21 @@ void Hit::setHitPassiveElement(const InactiveElement* myPassiveElem) {
   //else logWARNING("Hit::setHitPassiveElement -> can't set inactive element to given hit, pointer null!");
 }
 
+/*
+ * Set track and recalculate hitXPos, hitYPos etc.
+ */
+void Hit::setTrack(const Track* newTrack) {
+
+  m_track      = newTrack;
+  m_A          = m_rPos/2./m_track->getRadius(m_zPos); // r_i/2R
+  m_C          = sqrt(1-m_A*m_A);
+  m_xPos       = m_rPos*m_C;
+  m_yPos       = m_rPos*m_A;
+  m_beta       = (m_A==0) ? 0. : asin(m_A);
+  m_rPhiLength = (m_A==0) ? m_rPos : m_track->getRadius(m_zPos)*2*m_beta;
+  m_sLength    = m_rPhiLength/sin(m_track->getTheta());
+};
+
 /**
  * Get the track angle theta.
  * @return The angle from the z-axis of the entire track
@@ -187,14 +236,14 @@ RILength Hit::getCorrectedMaterial() {
 }
 
 /**
- * Getter for the rPhi resolution (local x coordinate for a module)
+ * Getter for the rPhi resolution (local rphi coordinate for a module)
  * If the hit is not active it returns -1
  * If the hit is connected to a module, then the module's resolution
  * is retured (if the hit is trigger-type, then then module's trigger resultion is requested)
  * if there is not any hit module, then the hit's resolution property is read and returned
  * @return the hit's local resolution
  */
-double Hit::getResolutionRphi(double trackRadius) {
+double Hit::getRphiResolution(double trackRadius) {
 
   if (!(this->isActive())) {
 
@@ -206,22 +255,27 @@ double Hit::getResolutionRphi(double trackRadius) {
     // Module hit
     if (m_hitModule) {
 
-      // R-Phi-resolution calculated as for a barrel-type module -> transform local R-Phi res. to a true module orientation (rotation by theta angle, skew, tilt)
-      // In detail, take into account a propagation of MS error on virtual barrel plane, on which all measurements are evaluated for consistency (global chi2 fit applied) ->
-      // in limit R->inf. propagation along line used, otherwise a very small correction factor coming from the circular shape of particle track is required (similar
-      // approach as for local resolutions)
-      // TODO: Currently, correction mathematicaly derived only for use case of const magnetic field -> more complex mathematical expression expected in non-const B field
-      // (hence correction not applied in such case)
+      // R-Phi-resolution as calculated for a virtual barrel-type module in natural circle polar coordinates (transform local R-Phi res. to a true module orientation, i.e.
+      // applying rotation by theta angle, skew, tilt etc.) -> necessary for consistent evaluation of local errors in global context of chi2 fit
+      // TODO: Currently, correction mathematicaly derived only for use case of const magnetic field -> more complex mathematical expression expected in a non-const B field
       double A = 0;
-      if (SimParms::getInstance().isMagFieldConst()) A = getRPos()/(2*trackRadius); // r_i / 2R
-      double B         = A/sqrt(1-A*A);
-      double tiltAngle = m_hitModule->tiltAngle();
-      double skewAngle = m_hitModule->skewAngle();
-      double resLocalX = m_hitModule->resolutionLocalX();
-      double resLocalY = m_hitModule->resolutionLocalY();
+      double C = 1;
+      if (SimParms::getInstance().isMagFieldConst()) A = m_A; // r_i / 2R
+      if (SimParms::getInstance().isMagFieldConst()) C = m_C; // sqrt[1-(r_i / 2R)^2)]
+      double B            = A/C;
+      double tiltAngle    = m_hitModule->tiltAngle();
+      double skewAngle    = m_hitModule->skewAngle();
+      double resLocalRPhi = m_hitModule->resLocalRPhi();
+      double resLocalZ    = m_hitModule->resLocalZ();
 
-      // All modules & its resolution propagated to the resolution of a virtual barrel module (endcap is a tilted module by 90 degrees, barrel is tilted by 0 degrees)
-      double resolutionRPhi = sqrt(pow((B*sin(skewAngle)*cos(tiltAngle) + cos(skewAngle)) * resLocalX,2) + pow(B*sin(tiltAngle) * resLocalY,2));
+      // All modules & its resolution propagated to the resolution of a virtual barrel module (endcap is tilted by 90 degrees, barrel is tilted by 0 degrees)
+      double resolutionRPhi = 0;
+
+      // For consistency reasons use parabolic approx or full approach
+      // TODO: Skew angle not used at the moment
+      // resolutionRPhi = sqrt(pow((B*sin(skewAngle)*cos(tiltAngle) + cos(skewAngle)) * resLocalRPhi,2) + pow(B*sin(tiltAngle) * resLocalZ,2));
+      if (SimParms::getInstance().useParabolicApprox()) resolutionRPhi = sqrt( pow(resLocalRPhi,2)   + pow(B*sin(tiltAngle)*resLocalZ,2) );
+      else                                              resolutionRPhi = sqrt( pow(C*resLocalRPhi,2) + pow(A*sin(tiltAngle)*resLocalZ,2) );
 
       return resolutionRPhi;
     }
@@ -231,7 +285,7 @@ double Hit::getResolutionRphi(double trackRadius) {
 }
 
 /**
- * Getter for the y resolution (local y coordinate for a module)
+ * Getter for the z resolution (local z coordinate for a module)
  * This corresponds to z coord for barrel modules and r coord for end-caps
  * If the hit is not active it returns -1
  * If the hit is connected to a module, then the module's resolution
@@ -239,7 +293,7 @@ double Hit::getResolutionRphi(double trackRadius) {
  * if there is not any hit module, then the hit's resolution property is read and returned
  * @return the hit's local resolution
  */
-double Hit::getResolutionZ(double trackRadius) {
+double Hit::getZResolution(double trackRadius) {
 
   if (!(this->isActive())) {
 
@@ -258,22 +312,28 @@ double Hit::getResolutionZ(double trackRadius) {
       }
       else {
 
-        // Z-resolution calculated as for a barrel-type module -> transform local Z res. to a true module orientation (rotation by theta angle, skew, tilt)
-        // In detail, take into account a propagation of MS error on virtual barrel plane, on which all measurements are evaluated for consistency (global chi2 fit applied) ->
-        // in limit R->inf. propagation along line used, otherwise a very small correction factor coming from the circular shape of particle track is required (similar
-        // approach as for local resolutions)
-        // TODO: Currently, correction mathematicaly derived only for use case of const magnetic field -> more complex mathematical expression expected in non-const B field
-        // (hence correction not applied in such case)
+        // Z-Phi-resolution as calculated for a virtual barrel-type module in natural circle polar coordinates (transform local R-Phi res. to a true module orientation, i.e.
+        // applying rotation by theta angle, skew, tilt etc.) -> necessary for consistent evaluation of local errors in global context of chi2 fit
+        // TODO: Currently, correction mathematicaly derived only for use case of const magnetic field -> more complex mathematical expression expected in a non-const B field
         double A = 0;
-        if (SimParms::getInstance().isMagFieldConst()) A = getRPos()/(2*trackRadius);
-        double D         = m_track->getCotgTheta()/sqrt(1-A*A);
-        double tiltAngle = m_hitModule->tiltAngle();
-        double skewAngle = m_hitModule->skewAngle();
-        double resLocalX = m_hitModule->resolutionLocalX();
-        double resLocalY = m_hitModule->resolutionLocalY();
+        double C = 1;
+        if (SimParms::getInstance().isMagFieldConst()) A = m_A; // r_i / 2R
+        if (SimParms::getInstance().isMagFieldConst()) C = m_C; // sqrt[1-(r_i / 2R)^2)]
+        double cotgTheta    = m_track->getCotgTheta();
+        double D            = cotgTheta/C;
+        double tiltAngle    = m_hitModule->tiltAngle();
+        double skewAngle    = m_hitModule->skewAngle();
+        double resLocalRPhi = m_hitModule->resLocalRPhi();
+        double resLocalZ    = m_hitModule->resLocalZ();
 
         // All modules & its resolution propagated to the resolution of a virtual barrel module (endcap is a tilted module by 90 degrees, barrel is tilted by 0 degrees)
-        double resolutionZ = sqrt(pow(((D*cos(tiltAngle) + sin(tiltAngle))*sin(skewAngle)) * resLocalX,2) + pow((D*sin(tiltAngle) + cos(tiltAngle)) * resLocalY,2));
+        double resolutionZ = 0;
+
+        // For consistency reasons use parabolic approx or full approach
+        // TODO: Skew angle not used at the moment
+        // resolutionZ = sqrt(pow(((D*cos(tiltAngle) + sin(tiltAngle))*sin(skewAngle)) * resLocalX,2) + pow((D*sin(tiltAngle) + cos(tiltAngle)) * resLocalY,2));
+        if (SimParms::getInstance().useParabolicApprox()) resolutionZ = sqrt( pow((D*sin(tiltAngle)   + cos(tiltAngle))*resLocalZ,2) );
+        else                                              resolutionZ = sqrt( pow((D*C*sin(tiltAngle) + cos(tiltAngle))*resLocalZ,2) + pow(A*cotgTheta*resLocalRPhi,2) );
 
         return resolutionZ;
       }
@@ -281,6 +341,45 @@ double Hit::getResolutionZ(double trackRadius) {
     // IP or beam-constraint etc. hit
     else return m_resolutionZ;
   }
+}
+
+/*
+ * Get R-Phi resulution in local module coordinates if module measures position
+ */
+double Hit::getLocalRPhiResolution() {
+
+  if (!m_hitModule || !isPosMeasured()) {
+
+    logERROR("Hit::getLocalRPhiResolution() - required for either passive hit or hit assigned to module, which doesn't measure position!!!");
+    return -1;
+  }
+  else return m_hitModule->resLocalRPhi();
+}
+
+/*
+ * Get Z resulution in local module coordinates if module measures position
+ */
+double Hit::getLocalZResolution() {
+
+  if (!m_hitModule || !isPosMeasured()) {
+
+    logERROR("Hit::getLocalZResolution() - required for either passive hit or hit assigned to module, which doesn't measure position!!!");
+    return -1;
+  }
+  else return m_hitModule->resLocalZ();
+}
+
+/*
+ * Get time-stamp resulution if module measures time
+ */
+double Hit::getTimeResolution() {
+
+  if (!m_hitModule || !isTimeMeasured()) {
+
+    logERROR("Hit::getTimeResolution() - required for either passive hit or hit assigned to module, which doesn't measure time!!!");
+    return -1;
+  }
+  else return m_hitModule->resTime();
 }
 
 /*
@@ -306,7 +405,7 @@ bool Hit::isSquareEndcap() {
 
 bool Hit::isStub() const
 {
-  return m_activeHitType == HitType::STUB;
+  return m_hitModuleType == HitModuleType::STUB;
 }
 
 /*

@@ -1,8 +1,17 @@
+//////////////////////////////////////////////////////////////////////
+//                                                                  //
+// Simulation run parameters file for FCC-hh tracker geometry v3.03 //
+//                                                                  //
+// Author: Z.Drasal (CERN)                                          //
+//                                                                  //
+//////////////////////////////////////////////////////////////////////
+
 SimParms {
           
     numMinBiasEvents       1000   // FCC-hh max pile-up
     zErrorIP               75     // mm 
     rphiErrorIP            0.01   // mm        
+    useParabolicApprox     1      // Use parabolic approximation in tracking or full tracking
     useLumiRegInGeomBuild  0
     useLumiRegInAnalysis   0
     useIPConstraint        1 //

@@ -39,6 +39,8 @@ namespace Units {
   static const float G   = 1E9;
 
   static const float s   = 1.0;
+  static const float ns  = 1E-9;
+  static const float ps  = 1E-12;
 
   static const float   b   = 1.0;
   static const float   B   = 8.0;
@@ -54,6 +56,8 @@ namespace Units {
   static const double percent = 1E-2;
   static const double degrees = M_PI/180.;
   static const double radians = 1;
+
+  static const double c       = 299792458*m/s;
 } // Namespace
 
 #endif /* INCLUDE_UNITS_H_ */

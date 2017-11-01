@@ -2,11 +2,13 @@
 #include "DetectorModule.h"
 #include "ModuleCap.h"
 #include "SimParms.h"
+#include "Units.h"
 
-define_enum_strings(SensorLayout) = { "nosensors", "mono", "pt", "stereo" };
-define_enum_strings(ZCorrelation) = { "samesegment", "multisegment" };
-define_enum_strings(ReadoutType)  = { "strip", "pixel", "pt" };
-define_enum_strings(ReadoutMode)  = { "binary", "cluster" };
+define_enum_strings(SensorLayout)    = { "nosensors", "mono", "pt", "stereo" };
+define_enum_strings(ZCorrelation)    = { "samesegment", "multisegment" };
+define_enum_strings(ReadoutType)     = { "strip", "pixel", "pt" };
+define_enum_strings(ReadoutMode)     = { "binary", "cluster" };
+define_enum_strings(MeasurementType) = { "position", "time", "posandtime" };
 
 //
 // Constructor - specify unique id, geometry module defining shape & parse geometry config file using boost property tree & read-in module parameters
@@ -33,6 +35,7 @@ DetectorModule::DetectorModule(int id, GeometricModule* moduleGeom, const Proper
  sensorNode               ("Sensor"                   , parsedOnly()),
  moduleType               ("moduleType"               , parsedOnly() , string("notype")),
  numSensors               ("numSensors"               , parsedOnly()),
+ measurementType          ("measurementType"          , parsedOnly() , POSITION),
  sensorLayout             ("sensorLayout"             , parsedOnly() , NOSENSORS),
  readoutType              ("readoutType"              , parsedOnly() , READOUT_STRIP),
  readoutMode              ("readoutMode"              , parsedOnly() , BINARY),
@@ -51,8 +54,9 @@ DetectorModule::DetectorModule(int id, GeometricModule* moduleGeom, const Proper
  stereoRotation           ("stereoRotation"           , parsedOnly() , 0.),
  reduceCombinatorialBackground("reduceCombinatorialBackground", parsedOnly(), false),
  trackingTags             ("trackingTags"             , parsedOnly()),
- resolutionLocalX         ("resolutionLocalX"         , parsedOnly()),
- resolutionLocalY         ("resolutionLocalY"         , parsedOnly()),
+ resLocalRPhi             ("resLocalRPhi"             , parsedOnly()),
+ resLocalZ                ("resLocalZ"                , parsedOnly()),
+ resTime                  ("resTime"                  , parsedOnly(), 0.),
  plotColor                ("plotColor"                , parsedOnly(), 0),
  serviceHybridWidth       ("serviceHybridWidth"       , parsedOnly(), 5),
  frontEndHybridWidth      ("frontEndHybridWidth"      , parsedOnly(), 5),
@@ -65,6 +69,9 @@ DetectorModule::DetectorModule(int id, GeometricModule* moduleGeom, const Proper
   this->myid(id);
   this->store(treeProperty);
   if (nodeProperty.count(id)>0) this->store(nodeProperty.at(id));
+
+  // Scale by unit
+  resTime.scaleByUnit(Units::ps);
 }
 
 //
@@ -92,6 +99,7 @@ DetectorModule::DetectorModule(int id, GeometricModule* moduleGeom, const Proper
  sensorNode               ("Sensor"                   , parsedOnly()),
  moduleType               ("moduleType"               , parsedOnly() , string("notype")),
  numSensors               ("numSensors"               , parsedOnly()),
+ measurementType          ("measurementType"          , parsedOnly() , POSITION),
  sensorLayout             ("sensorLayout"             , parsedOnly() , NOSENSORS),
  readoutType              ("readoutType"              , parsedOnly() , READOUT_STRIP),
  readoutMode              ("readoutMode"              , parsedOnly() , BINARY),
@@ -110,8 +118,9 @@ DetectorModule::DetectorModule(int id, GeometricModule* moduleGeom, const Proper
  stereoRotation           ("stereoRotation"           , parsedOnly() , 0.),
  reduceCombinatorialBackground("reduceCombinatorialBackground", parsedOnly(), false),
  trackingTags             ("trackingTags"             , parsedOnly()),
- resolutionLocalX         ("resolutionLocalX"         , parsedOnly()),
- resolutionLocalY         ("resolutionLocalY"         , parsedOnly()),
+ resLocalRPhi             ("resLocalRPhi"             , parsedOnly()),
+ resLocalZ                ("resLocalZ"                , parsedOnly()),
+ resTime                  ("resTime"                  , parsedOnly(), 0.),
  plotColor                ("plotColor"                , parsedOnly(), 0),
  serviceHybridWidth       ("serviceHybridWidth"       , parsedOnly(), 5),
  frontEndHybridWidth      ("frontEndHybridWidth"      , parsedOnly(), 5),
@@ -123,6 +132,9 @@ DetectorModule::DetectorModule(int id, GeometricModule* moduleGeom, const Proper
   // Set the geometry config parameters
   this->myid(id);
   this->store(treeProperty);
+
+  // Scale by unit
+  resTime.scaleByUnit(Units::ps);
 }
 
 //
@@ -172,14 +184,14 @@ void DetectorModule::build() {
 //
 void DetectorModule::setup() {
 
-  resolutionLocalX.setup([this]() { 
+  resLocalRPhi.setup([this]() {
     double res = 0;
     for (const Sensor& s : sensors()) res += pow(meanWidth() / s.numStripsAcross() / sqrt(12), 2);
     return sqrt(res)/numSensors();
   });
 
-  resolutionLocalY.setup([this]() {
-    if (stereoRotation() != 0.) return resolutionLocalX() / sin(stereoRotation());
+  resLocalZ.setup([this]() {
+    if (stereoRotation() != 0.) return resLocalRPhi() / sin(stereoRotation());
     else {
       return length() / maxSegments() / sqrt(12); // NOTE: not combining measurements from both sensors. The two sensors are closer than the length of the longer sensing element, making the 2 measurements correlated. considering only the best measurement is then a reasonable approximation (since in case of a PS module the strip measurement increases the precision by only 0.2% and in case of a 2S the sensors are so close that they basically always measure the same thing)
     }
@@ -318,12 +330,12 @@ double DetectorModule::effectiveDsDistance() const {
 //
 // Check if track hit the module -> if yes, return true with passed material, hit position vector & hitType (which module sensor(s) was/were hit)
 //
-bool DetectorModule::checkTrackHits(const XYZVector& trackOrig, const XYZVector& trackDir, Material& hitMaterial, HitType& hitType, XYZVector& hitPos) const {
+bool DetectorModule::checkTrackHits(const XYZVector& trackOrig, const XYZVector& trackDir, Material& hitMaterial, HitModuleType& hitType, XYZVector& hitPos) const {
 
   // Initialize: hit was found, material, hitPos & relative hit path length wrt perpendicular passage
   hitMaterial.radiation   = 0.;
   hitMaterial.interaction = 0.;
-  hitType                 = HitType::NONE;
+  hitType                 = HitModuleType::NONE;
   hitPos.SetX(0.);
   hitPos.SetY(0.);
   hitPos.SetZ(0.);
@@ -337,7 +349,7 @@ bool DetectorModule::checkTrackHits(const XYZVector& trackOrig, const XYZVector&
     if (segm.second > -1) {
 
       hitPos  = segm.first;
-      hitType = HitType::INNER; // The following line used to return HitType::BOTH. Changing to INNER in order to avoid double hit counting
+      hitType = HitModuleType::INNER; // The following line used to return HitType::BOTH. Changing to INNER in order to avoid double hit counting
       hitFound= true;
     }
   }
@@ -351,21 +363,21 @@ bool DetectorModule::checkTrackHits(const XYZVector& trackOrig, const XYZVector&
     if (inSegm.second > -1 && outSegm.second > -1) { 
 
       hitPos  = inSegm.first;
-      hitType = ((zCorrelation() == SAMESEGMENT && (inSegm.second / (maxSegments()/minSegments()) == outSegm.second)) || zCorrelation() == MULTISEGMENT) ? HitType::STUB : HitType::BOTH;
+      hitType = ((zCorrelation() == SAMESEGMENT && (inSegm.second / (maxSegments()/minSegments()) == outSegm.second)) || zCorrelation() == MULTISEGMENT) ? HitModuleType::STUB : HitModuleType::BOTH;
       hitFound= true;
     }
     // Hit found in inner sensor only
     else if (inSegm.second > -1)  {
 
       hitPos  = inSegm.first;
-      hitType = HitType::INNER;
+      hitType = HitModuleType::INNER;
       hitFound= true;
     }
     // Hit found in outer sensor only
     else if (outSegm.second > -1) {
 
       hitPos  = outSegm.first;
-      hitType = HitType::OUTER;
+      hitType = HitModuleType::OUTER;
       hitFound= true;
     }
   }

@@ -13,6 +13,7 @@
 #include <set>
 #include <vector>
 
+#include "global_constants.h"
 #include "DetectorModule.h"
 #include "Hit.h"
 #include <Math/Vector3D.h>
@@ -117,41 +118,63 @@ public:
   double getPhi() const                { return m_phi;}
   double getTransverseMomentum() const { return m_pt; }
   double getPt() const                 { return m_pt; }
+  double getP() const                  { return m_p; }
   
-  //! Get DeltaRho (error on 1/R) at refPoint [rPos, zPos].
+  //! Get DeltaRho (error on 1/R) at refPoint [rPos, zPos] in "parabolic" approximation.
   //! Propagator direction defines, which part of tracker (at higher radii or lower radii from the ref. point) is going to be used.
   //! Using 3x3 covariance propagator in case [r,z]!=[0,0]
   double getDeltaRho(double refPointRPos, bool propagOutIn=true);
 
-  //! Get DeltaPtOvePt at refPoint [rPos, zPos] (utilize the calculated deltaRho quantity)
+  //! Get DeltaPtOvePt at refPoint [rPos, zPos] in "parabolic" approximation (utilize the calculated deltaRho quantity).
   //! Propagator direction defines, which part of tracker (at higher radii or lower radii from the ref. point) is going to be used.
   double getDeltaPtOverPt(double refPointRPos, bool propagOutIn=true);
 
-  //! Get DeltaPOverP at refPoint [rPos, zPos] (utilize deltaRho & deltaCotgTheta quantities)
+  //! Get DeltaPtOverPt at [0,0] in full math. approach, i.e. using full 5x5 covariance matrix
+  double getDeltaPtOverPtFull();
+
+  //! Get DeltaPOverP at refPoint [rPos, zPos] in "parabolic" approximation (utilize deltaRho & deltaCotgTheta quantities)
   //! Propagator direction defines, which part of tracker (at higher radii or lower radii from the ref. point) is going to be used.
   double getDeltaPOverP(double refPointRPos, bool propagOutIn=true);
 
-  //! Get DeltaPhi(Phi0) at refPoint [rPos, zPos] ([0,0])
+  //! Get DeltaPhi(Phi0) at refPoint [rPos, zPos] ([0,0]) in "parabolic" approximation
   //! Propagator direction defines, which part of tracker (at higher radii or lower radii from the ref. point) is going to be used.
   //! Using 3x3 covariance propagator in case [r,z]!=[0,0]
   double getDeltaPhi(double refPointRPos, bool propagOutIn=true);
   double getDeltaPhi0() { return getDeltaPhi(0.0); };
 
-  //! Get DeltaD (D0) at refPoint [rPos, zPos] ([0,0])
+  //! GetDeltaPhi at [0,0] in full math. approach, i.e. using full 5x5 covariance matrix
+  double getDeltaPhi0Full();
+
+  //! Get DeltaD (D0) at refPoint [rPos, zPos] ([0,0]) in "parabolic" approximation
   //! Propagator direction defines, which part of tracker (at higher radii or lower radii from the ref. point) is going to be used.
   //! Using 3x3 covariance propagator in case [r,z]!=[0,0]
   double getDeltaD(double refPointRPos, bool propagOutIn=true);
   double getDeltaD0() { return getDeltaD(0.0); };
 
-  //! Get DeltaCtgTheta at refPoint [rPos, zPos]
+  //! Get DeltaD0, i.e. at [0,0] in full math. approach, i.e. using full 5x5 covariance matrix
+  double getDeltaD0Full();
+
+  //! Get DeltaCtgTheta at refPoint [rPos, zPos] in "parabolic" approximation
   //! Propagator direction defines, which part of tracker (at higher radii or lower radii from the ref. point) is going to be used.
+  //! Using 2x2 covariance propagator in case [r,z]!=[0,0]
   double getDeltaCtgTheta(double refPointRPos, bool propagOutIn=true);
 
-  //! Get DeltaZ (Z0) at refPoint [rPos, zPos] ([0,0])
+  //! Get DeltaCtgTheta at [0,0] in full math. approach, i.e. using fulll 5x5 covariance matrix
+  double getDeltaCtgThetaFull();
+
+  //! Get DeltaZ (Z0) at refPoint [rPos, zPos] ([0,0]) in "parabolic" approximation
   //! Propagator direction defines, which part of tracker (at higher radii or lower radii from the ref. point) is going to be used.
   //! Using 2x2 covariance propagator in case [r,z]!=[0,0]
   double getDeltaZ(double refPointRPos, bool propagOutIn=true);
   double getDeltaZ0() { return getDeltaZ(0.0); }
+
+  //! Get DeltaZ0, i.e. at [0,0] in full math. approach, i.e. using full 5x5 covariance matrix
+  double getDeltaZ0Full();
+
+  //! Get DeltaT0 at refPoint [rPos, zPos] ([0,0]) combining all time-stamps along the track. Use track path length, defined as
+  //! difference between time layer and ref. point to calculated the time of flight correction factor to individual time measurements.
+  double getDeltaT(double refPointRPos);
+  double getDeltaT0() { return getDeltaT(0.0); }
 
   //! Get DeltaCTau for secondary particles coming from the primary vertex at ~ [0,0] -> an important quantity to estimate the
   //! resolution of secondary vertices
@@ -162,7 +185,7 @@ public:
 
   // Calculate radius or 1/R at given z, assuming B = B(z).e_z + 0.e_x + 0 e_y
   double getRho(double zPos) const    { return (getRadius(zPos)!=0 ? 1/getRadius(zPos) : 0);}
-  double getRadius(double zPos) const { return fabs(m_pt / (0.3 * getMagField(zPos))); }
+  double getRadius(double zPos) const { return fabs(m_pt / (c_K * getMagField(zPos))); }
 
   const ROOT::Math::Polar3DVector& getDirection() const { return m_direction; }
   const XYZVector&                 getOrigin() const    { return m_origin; }
@@ -200,7 +223,7 @@ public:
   const std::set<std::string>& getTags() const { return m_tags; }
 
   //! Get a vector of pairs: Detector module & hit type for Trigger hits
-  std::vector<std::pair<const DetectorModule*, HitType>> getHitModules() const;
+  std::vector<std::pair<const DetectorModule*, HitModuleType>> getHitModules() const;
 
 //  void addEfficiency(double efficiency, bool alsoPixel = false);
 //  void keepTriggerOnly();
@@ -215,31 +238,13 @@ public:
 
 protected:
 
-  //! Main method calculating track parameters in s-z plane only, using linear fit with parameters: cotg(theta), z0 -> internally calling computation of covMatrixRZ
-  //! As the Multiple scattering effects must be set in a way to have then correct propagation of errors up-to ref. point [rPos,zPos] (including all dead materials between the
-  //! last measurement and the ref. point). E.g. for standard estimation of D0,Z0 parameters one calculates MS inside->out from rPos=0 (zPos can be calculated from rPos using theta).
-  //! PropagOutIn variable defines whether detectors at higher R than the ref. point (true) should be used for error calculation/propagation (e.g. d0,z0) or whether detectors at
-  //! lower R (false).
-  //! Return true if errors correctly calculated
-  bool computeErrorsRZ(double refPointRPos=0, bool propagOutIn=true);
-  //! Compute 2x2 covariance matrix of track parameters in R-Z (s-z), using the NxN variance matrix (N hits = K+L: K active hits on detectors + L passive (artificial) hits due to material).
-  //! Ref. point dictates, whether Multiple scattering effects need to be calculated inside-out or outside-in. MS effect is symmetric as regards track fitting. PropagOutIn variable
-  //! defines whether detectors at higher R than the ref. point (true) should be used for error calculation/propagation (e.g. d0,z0) or whether detectors at lower R (false).
-  //! Return true if V invertable
-  bool computeCovarianceMatrixRZ(double refPointRPos, bool propagOutIn);
-
-  //! Main method calculating track parameters in r-phi plane only, using parabolic track approximation in R-Phi plane: 1/R, d0, phi0 parameters -> internally calling computation
-  //! of covMatrixRPhi. As the Multiple scattering effects must be set in a way to have then correct propagation of errors up-to the ref. point [rPos,zPos] (including all dead
-  //! materials between the last measurement and the ref. point). E.g. for standard estimation of D0,Z0 parameters one calculates MS inside->out from rPos=0 (zPos can be
-  //! calculated from rPos using theta). PropagOutIn variable defines whether detectors at higher R than the ref. point (true) should be used for error calculation/propagation
-  //! (e.g. d0,z0) or whether detectors at lower R (false).
-  //! Return true if errors correctly calculated
-  bool computeErrorsRPhi(double refPointRPos=0, bool propagOutIn=true);
-  //! Compute 3x3 covariance matrix of the track parameters in R-Phi projection, using NxN (N hits = K+L: K active hits on detectors + L passive (artificial) hits due to material)
-  //! Ref. point dictates, whether Multiple scattering effects need to be calculated inside-out or outside-in. MS effect is symmetric as regards track fitting. PropagOutIn variable
-  //! defines whether detectors at higher R than the ref. point (true) should be used for error calculation/propagation (e.g. d0,z0) or whether detectors at lower R (false).
-  //! Return true if V invertable
-  bool computeCovarianceMatrixRPhi(double refPointRPos, bool propagOutIn);
+  //! Main method calculating track parameters in both r-phi & s-z planes, using linear fit with parameters: 1/R, phi0, d0, cotg(theta) & z0. Within the calculation an NxN variance
+  //! matrix is used (N hits = K+L: K active hits on detectors + L passive (artificial) hits due to material). Ref. point dictates, whether Multiple scattering effects need to be
+  //! calculated inside-out or outside-in. MS effect is symmetric as regards track fitting. PropagOutIn variable defines whether detectors at higher R than the ref. point (true)
+  //! should be used for error calculation/propagation (e.g. d0,z0) or whether detectors at lower R (false). E.g. for standard estimation of D0,Z0 parameters one calculates MS
+  //! inside->out from rPos=0 (zPos can be calculated from rPos using theta).
+  //! Return true if covariance matrix correctly calculated
+  bool computeCovarianceMatrix(double refPoint, bool propagOutIn);
 
   //! Helper fce returning derivative: d[f(rho, d0, phi0)]/d[rho], where f approximates
   //! a helix by set of parabolas. In general, N connected parabolas used, for const B
@@ -249,34 +254,37 @@ protected:
   //! Sort internally all hits assigned to this track -> sorting algorithm based on hit radius - by smaller radius sooner or vice-versa (inner-to-outer approach or vice-versa)
   void sortHits(bool bySmallerR);
 
-  //! Remove hits that don't follow the parabolic approximation used in tracking - TODO: still needs to be updated (not all approximations taken into account here)
-  bool followsParabolicApprox(double rPos, double zPos) { return rPos<2*getRadius(zPos); }
+  //! Remove hits, which would be at radius higher than f*curling_radius (hits assumed to be found in line approach, which is perfectly valid if the geometry has a cylindrical
+  //! symmetry, but then all hits above curling radius must be removed -> check that hits are below curling radius). Factor f stands for a cut_off factor to avoid passage of
+  //! modules at very shallow angle, i.e. hit radius close to the curling_radius: defined by max sin(phi-phi0), where phi is set as follows: arc_length = R*2*phi
+  bool isHitRPosLowerThanCurlingRadius(double rPos, double zPos) { return rPos<track_maxSinPhi*2*getRadius(zPos); }
   bool pruneHits();
 
-  double m_theta;             //!< Track shot at given theta & phi, i.e. theta at primary vertex
-  double m_phi;               //!< Track shot at given theta & phi, i.e. phi at primary vertex
-  double m_pt;                //!< Particle transverse momentum (assuming B = fce of z only -> pT doesn't change along the path, only radius changes), pT sign: + -> particle traverses inside-out, - -> particle traverses outside-in
-  double m_cotgTheta;         //!< Automatically calculated from theta at [0,0]
-  double m_eta;               //!< Automatically calculated from eta at [0,0]
+  const double c_K=0.299792458;//!< Track pT[GeV/c] = K . Bz[T] . R[m]
+
+  double m_theta;              //!< Track shot at given theta & phi, i.e. theta at primary vertex
+  double m_phi;                //!< Track shot at given theta & phi, i.e. phi at primary vertex
+  double m_pt;                 //!< Particle transverse momentum (assuming B = fce of z only -> pT doesn't change along the path, only radius changes), pT sign: + -> particle traverses inside-out, - -> particle traverses outside-in
+  double m_p;                  //!< Particle momentum
+  double m_cotgTheta;          //!< Automatically calculated from theta at [0,0]
+  double m_eta;                //!< Automatically calculated from theta at [0,0]
 
   ROOT::Math::Polar3DVector  m_direction; //!< Track parameters as a 3-vector: R, theta, phi
   XYZVector                  m_origin;    //!< Track origin as a 3-vector: X, Y, Z TODO: For tracking model origin assumed to be at [0,0,0]
 
-  bool   m_reSortHits;        //!< Caching whether necessary to resort hits (sorting will be done again if a new hit added or direction changed)
-  bool   m_covRPhiDone;       //!< Caching whether errors in R-Phi already calculated (will be recalculated, if direction of propagation changed, or added new hit etc.)
-  bool   m_covRZDone;         //!< Caching whether errors in R-Z already calculated (will be recalculated, if direction of propagation changed, or added new hit etc.)
-  bool   m_refPointRPosCache; //!< Caching the last r position of ref. point, which was used to calculate track errors (if changed -> recalculate track parameters).
-  bool   m_propagOutInCache;  //!< Caching the last used propagator direction (if changed -> recalculate track parameters).
+  bool   m_reSortHits;         //!< Caching whether necessary to resort hits (sorting will be done again if a new hit added or direction changed)
+  bool   m_covDone;            //!< Caching whether errors in R-Phi & s-z already calculated (will be recalculated, if direction of propagation changed, or added new hit etc.)
+  bool   m_refPointRPosCache;  //!< Caching the last r position of ref. point, which was used to calculate track errors (if changed -> recalculate track parameters).
+  bool   m_propagOutInCache;   //!< Caching the last used propagator direction (if changed -> recalculate track parameters).
 
-
-  HitCollection         m_hits;         //!< Hits assigned to track
+  HitCollection         m_hits;         //!< Position hits assigned to track // TODO: Combine time & pos. hits into 1 vector
+  HitCollection         m_timeHits;     //!< Time stamps assigned to track
   std::set<std::string> m_tags;         //!< Which subdetectors to be used in tracking (each subdetector is tagged by a set of tags, e.g. pixel, fwd, tracker -> used in tracking of pixels, fwd tracking & full tracker)
 
   // Track parameters covariance matrices
-  TMatrixTSym<double>   m_varMatrixRPhi; //!< NxN (hits) Variance matrix in R-Phi: V(NxN) (N hits = K+L: K active hits on detectors + L passive (artificial) hits due to material)
   TMatrixT<double>      m_covMatrixRPhi; //!< 3x3 Covariance matrix in R-Phi: pT (1/R), phi, d0 at ref. point [r,z] = [0,0]: C(3x3)
-  TMatrixTSym<double>   m_varMatrixRZ;   //!< NxN (hits) Variance matrix in R-Z V(NxN) (N hits = K+L: K active hits on detectors + L passive (artificial) hits due to material)
-  TMatrixT<double>      m_covMatrixRZ;   //!< 2x2 Covariance matrix in R-Phi: z0, cotg(theta) at ref. point [r,z] = [0,0]: C(2x2)
+  TMatrixT<double>      m_covMatrixRZ;   //!< 2x2 Covariance matrix in R-Phi: cotg(theta), z0 at ref. point [r,z] = [0,0]: C(2x2)
+  TMatrixT<double>      m_covMatrixFull; //!< Full 5x5 Covariance matrix: pT (1/R), phi, d0, cotg(theta), z0 at ref. point [r,z] = [0,0]: C(5x5)
 
 }; // Class
 

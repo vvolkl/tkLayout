@@ -8,6 +8,7 @@
 
 // System include files
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/range/join.hpp>
 #include <map>
 
 // Project include files
@@ -95,8 +96,8 @@ bool ExtractorFCCSW::analyze()
   detNames2IDs.insert(std::make_pair("OuterECAPneg", "EndCapTrackerOuter_id + 16"));
   detNames2IDs.insert(std::make_pair("FwdECAPpos", "27"));
   detNames2IDs.insert(std::make_pair("FwdECAPneg", "28"));
-  detNames2IDs.insert(std::make_pair("FwdHelpECAPpos", "29"));
-  detNames2IDs.insert(std::make_pair("FwdHelpECAPneg", "30"));
+  detNames2IDs.insert(std::make_pair("FwdIECAPpos", "29"));
+  detNames2IDs.insert(std::make_pair("FwdIECAPneg", "30"));
 
   // Save XML file
   std::string xmlDocBaseName = SimParms::getInstance().getWebDir();
@@ -124,7 +125,7 @@ bool ExtractorFCCSW::analyze()
   xmlDetBrlReadout->InsertEndChild(xmlDetBrlSeg);
 
   auto xmlDetBrlId = m_xmlDoc->NewElement("id");
-  xmlDetBrlId->SetText("system:5,layer:5,module:16,component:4,x:-15,z:-15");
+  xmlDetBrlId->SetText("system:5,layer:5,module:18,x:-15,z:-15");
   xmlDetBrlReadout->InsertEndChild(xmlDetBrlId);
 
   // Ecap read-out
@@ -139,7 +140,7 @@ bool ExtractorFCCSW::analyze()
   xmlDetEcapReadout->InsertEndChild(xmlDetEcapSeg);
 
   auto xmlDetEcapId = m_xmlDoc->NewElement("id");
-  xmlDetEcapId->SetText("system:5,disc:5,module:16,component:4,x:-15,z:-15");
+  xmlDetEcapId->SetText("system:5,layer:5,module:18,x:-15,z:-15");
   xmlDetEcapReadout->InsertEndChild(xmlDetEcapId);
 
 
@@ -297,8 +298,7 @@ bool ExtractorFCCSW::analyze()
         auto xmlBrlRods = m_xmlDefinitionsDoc->NewElement("rods");
 
         // Add detailed info about straight rods
-        // TODO: Add tilted rods
-        for (const auto& iRod : iLayer.flatRods()) {
+        for (const auto& iRod : boost::join(iLayer.flatRods(), iLayer.tiltedRods())) {
 
           // Odd rods
           if (iRod.myid()==1) {
@@ -307,7 +307,6 @@ bool ExtractorFCCSW::analyze()
             xmlBrlRods->SetAttribute("repeat",        iLayer.numRods());
             xmlBrlRods->SetAttribute("smallDelta",    printWithUnit(iLayer.smallDelta(), c_precision, "mm").c_str());
             xmlBrlRods->SetAttribute("rPhiOverlap",   printWithUnit(iLayer.phiOverlap(), c_precision, "mm").c_str());
-            xmlBrlRods->SetAttribute("nRPhiSegments", iLayer.phiSegments());
             try {
               xmlBrlRods->SetAttribute("zOverlap", printWithUnit((dynamic_cast<const RodPairStraight&>(iRod)).zOverlap(), c_precision, "mm").c_str());
             }
@@ -317,7 +316,7 @@ bool ExtractorFCCSW::analyze()
             xmlBrlIthLayer->InsertEndChild(xmlBrlRods);
 
             // Odd rod
-            auto xmlBrlRodOdd = m_xmlDefinitionsDoc->NewElement("rodOdd");
+            auto xmlBrlRodOdd = m_xmlDefinitionsDoc->NewElement((iRod.isTilted() ? "rodOddTilted" : "rodOdd"));
             xmlBrlRodOdd->SetAttribute("id", iRod.myid());
             xmlBrlRods->InsertEndChild(xmlBrlRodOdd);
 
@@ -343,8 +342,8 @@ bool ExtractorFCCSW::analyze()
                 xmlBrlSensorProperties->SetAttribute("sensorLength"   , printWithUnit(iMod.length(),   c_precision, "mm").c_str());
                 xmlBrlSensorProperties->SetAttribute("sensorWidth"    , printWithUnit(iMod.meanWidth(),c_precision, "mm").c_str());
                 xmlBrlSensorProperties->SetAttribute("sensorThickness", printWithUnit(iMod.thickness(),c_precision, "mm").c_str());
-                xmlBrlSensorProperties->SetAttribute("resRPhi"        , printWithUnit(iMod.resolutionLocalX(), 1, "um").c_str());
-                xmlBrlSensorProperties->SetAttribute("resZ"           , printWithUnit(iMod.resolutionLocalY(), 1, "um").c_str());
+                xmlBrlSensorProperties->SetAttribute("resRPhi"        , printWithUnit(iMod.resLocalRPhi(), 1      , "um").c_str());
+                xmlBrlSensorProperties->SetAttribute("resZ"           , printWithUnit(iMod.resLocalZ()   , 1      , "um").c_str());
 
                 auto xmlBrlModComponents = m_xmlDefinitionsDoc->NewElement("components");
                 xmlBrlModProperties->InsertEndChild(xmlBrlModComponents);
@@ -394,9 +393,9 @@ bool ExtractorFCCSW::analyze()
             }
           }
           // Even rods
-          else if (iRod.myid()==2) {
+          else if (iRod.myid()==2 ) {
 
-            auto xmlBrlRodEven = m_xmlDefinitionsDoc->NewElement("rodEven");
+            auto xmlBrlRodEven = m_xmlDefinitionsDoc->NewElement((iRod.isTilted() ? "rodEvenTilted" : "rodEven"));
             xmlBrlRodEven->SetAttribute("id", iRod.myid());
             xmlBrlRods->InsertEndChild(xmlBrlRodEven);
 
@@ -422,8 +421,8 @@ bool ExtractorFCCSW::analyze()
                 xmlBrlSensorProperties->SetAttribute("sensorLength"   , printWithUnit(iMod.length(),   c_precision, "mm").c_str());
                 xmlBrlSensorProperties->SetAttribute("sensorWidth"    , printWithUnit(iMod.meanWidth(),c_precision, "mm").c_str());
                 xmlBrlSensorProperties->SetAttribute("sensorThickness", printWithUnit(iMod.thickness(),c_precision, "mm").c_str());
-                xmlBrlSensorProperties->SetAttribute("resRPhi"        , printWithUnit(iMod.resolutionLocalX(), 1, "um").c_str());
-                xmlBrlSensorProperties->SetAttribute("resZ"           , printWithUnit(iMod.resolutionLocalY(), 1, "um").c_str());
+                xmlBrlSensorProperties->SetAttribute("resRPhi"        , printWithUnit(iMod.resLocalRPhi(), 1      , "um").c_str());
+                xmlBrlSensorProperties->SetAttribute("resZ"           , printWithUnit(iMod.resLocalZ()   , 1      , "um").c_str());
 
                 auto xmlBrlModComponents = m_xmlDefinitionsDoc->NewElement("components");
                 xmlBrlModProperties->InsertEndChild(xmlBrlModComponents);
@@ -472,10 +471,7 @@ bool ExtractorFCCSW::analyze()
               xmlBrlModules->InsertEndChild(xmlBrlMod);
             }
 
-          }
-          else {
-            break;
-          } // Only first odd & even rod read-in
+          } // only first odd and even rods exported
         } // Rods
       } // Layers
     } // Barrels
@@ -527,6 +523,8 @@ bool ExtractorFCCSW::analyze()
           xmlEcapIthDisc->SetAttribute("z",        printWithUnit(iDisc.averageZ(),   c_precision, "mm").c_str());
           xmlEcapIthDisc->SetAttribute("zmin",     printWithUnit(iDisc.minZAllMat(), c_precision, "mm").c_str());
           xmlEcapIthDisc->SetAttribute("zmax",     printWithUnit(iDisc.maxZAllMat(), c_precision, "mm").c_str());
+          xmlEcapIthDisc->SetAttribute("rmin",     printWithUnit(iDisc.minR(), c_precision, "mm").c_str());
+          xmlEcapIthDisc->SetAttribute("rmax",     printWithUnit(iDisc.maxR(), c_precision, "mm").c_str());
           xmlEcapIthDisc->SetAttribute("bigDelta", printWithUnit(iDisc.bigDelta(),   c_precision, "mm").c_str());
           xmlEcapDiscs->InsertEndChild(xmlEcapIthDisc);
 
@@ -549,7 +547,9 @@ bool ExtractorFCCSW::analyze()
             }
 
             // Discs are symmetrically shifted - fill only the first disc
-            if (iDisc.myid()==1) {
+            // except for the Inner forward ecap -- this is a hack because it is treated
+            // differently in the constructor. Here we want to output all info for all discs
+            if (iDisc.myid()==1 || (ecapName.find("IECAP") != std::string::npos))  {
               auto xmlEcapRing = m_xmlDefinitionsDoc->NewElement("ring");
               xmlEcapRing->SetAttribute("id",       iRing.myid());
               xmlEcapRing->SetAttribute("phi0",     printWithUnit(iRing.zRotation(),2*c_precision, "rad").c_str());
@@ -590,8 +590,8 @@ bool ExtractorFCCSW::analyze()
                   xmlEcapSensorProperties->SetAttribute("sensorWidthMin" , printWithUnit(iMod.minWidth(), c_precision, "mm").c_str());
                   xmlEcapSensorProperties->SetAttribute("sensorWidthMax" , printWithUnit(iMod.maxWidth(), c_precision, "mm").c_str());
                   xmlEcapSensorProperties->SetAttribute("sensorThickness", printWithUnit(iMod.thickness(),c_precision, "mm").c_str());
-                  xmlEcapSensorProperties->SetAttribute("resRPhi"        , printWithUnit(iMod.resolutionLocalX(), 1, "um").c_str());
-                  xmlEcapSensorProperties->SetAttribute("resZ"           , printWithUnit(iMod.resolutionLocalY(), 1, "um").c_str());
+                  xmlEcapSensorProperties->SetAttribute("resRPhi"        , printWithUnit(iMod.resLocalRPhi(), 1      , "um").c_str());
+                  xmlEcapSensorProperties->SetAttribute("resZ"           , printWithUnit(iMod.resLocalZ()   , 1      , "um").c_str());
 
                   auto xmlEcapModComponents = m_xmlDefinitionsDoc->NewElement("components");
                   xmlEcapModProperties->InsertEndChild(xmlEcapModComponents);

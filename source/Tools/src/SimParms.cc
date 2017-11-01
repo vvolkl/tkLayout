@@ -25,6 +25,7 @@ SimParms::SimParms() :
  useIPConstraint(         "useIPConstraint"         , parsedAndChecked()),
  useLumiRegInGeomBuild(   "useLumiRegInGeomBuild"   , parsedOnly(), 1),
  useLumiRegInAnalysis(    "useLumiRegInAnalysis"    , parsedOnly(), 0),
+ useParabolicApprox(      "useParabolicApprox"      , parsedOnly(), 0),
  ptCost(                  "ptCost"                  , parsedAndChecked()),
  stripCost(               "stripCost"               , parsedAndChecked()),
  efficiency(              "efficiency"              , parsedAndChecked()),

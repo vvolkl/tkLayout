@@ -248,7 +248,7 @@ bool AnalyzerGeometry::analyze()
       auto origin = ROOT::Math::XYZVector(0, 0, zPos);
 
       // Check whether generated track hits a module -> collect the list of hit modules
-      std::vector<std::pair<DetectorModule*, HitType>> hitModules;
+      std::vector<std::pair<DetectorModule*, HitModuleType>> hitModules;
 
       static const double zErrorSafetyMargin = 5. ; // track origin shift in units of zError to compute boundaries
 
@@ -261,12 +261,12 @@ bool AnalyzerGeometry::analyze()
         if (module->couldHit(direction, zErrorIP*zErrorSafetyMargin)) {
 
           // Get hit
-          XYZVector hitPos;
-          Material  hitMaterial;
-          HitType   hitType;
-          if (module->checkTrackHits(origin, direction, hitMaterial, hitType, hitPos)) {
+          XYZVector     hitPos;
+          Material      hitMaterial;
+          HitModuleType hitModuleType;
+          if (module->checkTrackHits(origin, direction, hitMaterial, hitModuleType, hitPos)) {
 
-            hitModules.push_back(std::make_pair(module,hitType));;
+            hitModules.push_back(std::make_pair(module,hitModuleType));;
           }
         }
       }
@@ -289,20 +289,20 @@ bool AnalyzerGeometry::analyze()
         auto modType = module.first->moduleType();
 
         // Inner
-        if (module.second & HitType::INNER) numHits++;
+        if (module.second & HitModuleType::INNER) numHits++;
 
         // Outer
-        if (module.second & HitType::OUTER) numHits++;
+        if (module.second & HitModuleType::OUTER) numHits++;
 
         // Stubs
-        if (module.second == HitType::STUB) {
+        if (module.second == HitModuleType::STUB) {
 
           typedNumStubs[modType]++;
           numStubs++;
         }
 
         // Count module hits for given type
-        if ((module.second & HitType::INNER) || (module.second & HitType::OUTER)) typedNumHits[modType]++;
+        if ((module.second & HitModuleType::INNER) || (module.second & HitModuleType::OUTER)) typedNumHits[modType]++;
       }
 
       // Fill plots
@@ -329,7 +329,7 @@ bool AnalyzerGeometry::analyze()
           if (layerName == (uniref.cnt + "_" + any2str(uniref.layer))) {
 
             layerHit = 1;
-            if (module.second == HitType::STUB) layerStub=1;
+            if (module.second == HitModuleType::STUB) layerStub=1;
 
             // In maximum one hit needed to calculate coverage (i.e efficiency)
             if (layerHit && layerStub) break;
@@ -387,6 +387,7 @@ bool AnalyzerGeometry::visualize(RootWSite& webSite)
   std::map<std::string, std::unique_ptr<RootWImage>> trackerXYImgBRL;
   std::map<std::string, std::unique_ptr<RootWImage>> trackerXYImgEC;
   PlotDrawer<RZFull, Type>           fullRZDrawer;
+  double fullTrkMaxZ = 0;
 
   for (auto iTracker : m_trackers) {
 
@@ -458,6 +459,7 @@ bool AnalyzerGeometry::visualize(RootWSite& webSite)
       rzDrawer.drawModules<ContourStyle>(RZCanvas);
       fullRZDrawer.addModulesType(iTracker->modules().begin(), iTracker->modules().end());
       drawBeamPipeRZ(RZCanvas, iTracker->maxZ());
+      fullTrkMaxZ = MAX(fullTrkMaxZ, iTracker->maxZ());
 
       RootWImage& myImage = myContentPlots.addImage(RZCanvas, vis_max_canvas_sizeX, vis_min_canvas_sizeY);
       myImage.setComment("RZ (envelope Radius versus Z) plot of the tracker");
@@ -476,8 +478,8 @@ bool AnalyzerGeometry::visualize(RootWSite& webSite)
       TCanvas XYCanvasBRL(std::string("XYCanvasBRL_"+trkName).c_str(), "XYView Barrel", vis_min_canvas_sizeX, vis_min_canvas_sizeY);
       setCanvasProperties(XYCanvasBRL);
       xyBarrelDrawer.drawFrame<TicksFrameStyle>(XYCanvasBRL);
-      xyBarrelDrawer.drawModules<ContourStyle>(XYCanvasBRL);
       drawBeamPipeXY(XYCanvasBRL);
+      xyBarrelDrawer.drawModules<ContourStyle>(XYCanvasBRL);
 
       RootWImage& myImage = myContentPlots.addImage(XYCanvasBRL, vis_min_canvas_sizeX, vis_min_canvas_sizeY);
       myImage.setComment("XY cross section of barrel modules");
@@ -495,8 +497,8 @@ bool AnalyzerGeometry::visualize(RootWSite& webSite)
       TCanvas XYCanvasEC(std::string("XYCanvasEC_"+trkName).c_str(), "XYView Endcap", vis_min_canvas_sizeX, vis_min_canvas_sizeY);
       setCanvasProperties(XYCanvasEC);
       xyEndcapDrawer.drawFrame<TicksFrameStyle>(XYCanvasEC);
-      xyEndcapDrawer.drawModules<ContourStyle>(XYCanvasEC);
       drawBeamPipeXY(XYCanvasEC);
+      xyEndcapDrawer.drawModules<ContourStyle>(XYCanvasEC);
 
       RootWImage& myImage = myContentPlots.addImage(XYCanvasEC, vis_min_canvas_sizeX, vis_min_canvas_sizeY);
       myImage.setComment("XY projection of endcap(s) modules");
@@ -599,6 +601,8 @@ bool AnalyzerGeometry::visualize(RootWSite& webSite)
   setCanvasProperties(fullRZCanvas);
   fullRZDrawer.drawFrame<TicksFrameStyle>(fullRZCanvas);
   fullRZDrawer.drawModules<ContourStyle>(fullRZCanvas);
+  bool bothPlsMinZ = true;
+  drawBeamPipeRZ(fullRZCanvas, fullTrkMaxZ, bothPlsMinZ);
 
   myContentFullLayout.addImage(fullRZCanvas, vis_max_canvas_sizeX, vis_min_canvas_sizeY);
 
@@ -645,22 +649,66 @@ bool AnalyzerGeometry::visualize(RootWSite& webSite)
 }
 
 //
-// Draw beam-pipe in RZ to given canvas
+// Draw beam-pipe in RZ to given canvas, set up-to which Z pos draw the beam-pipe contour & whether draw beam-pipe
+// in both +-Z or just +Z (default)
 //
-void AnalyzerGeometry::drawBeamPipeRZ(TCanvas& canvas, double maxZ)
+void AnalyzerGeometry::drawBeamPipeRZ(TCanvas& canvas, double maxZ, bool bothPlsMinZ/*=false*/)
 {
   if (m_beamPipe) {
-    double bpRadius = m_beamPipe->radius();
-    double bpThick  = m_beamPipe->thickness();
 
     // Beam-pipe in RZ
-    TPolyLine beamPipeRZ;
-    beamPipeRZ.SetPoint(0, 0                     , bpRadius + bpThick/2.);
-    beamPipeRZ.SetPoint(1, maxZ*vis_safety_factor, bpRadius + bpThick/2.);
-    beamPipeRZ.SetLineColor(14);
-    beamPipeRZ.SetLineWidth(2);
+    TPolyLine beamPipeRZLower;
+    TPolyLine beamPipeRZUpper;
+
+    // Different approach if full +-Z drawing option required
+    auto startValue = (bothPlsMinZ) ? -m_beamPipe->getNSegments() : 0;
+    auto iOffset    = abs(startValue);
+
+    for (auto i=startValue; i<=m_beamPipe->getNSegments(); i++) {
+
+      // Special care needed if full +-Z option required
+      float iSign = (i>=0) ? +1 : -1;
+      int   iAbs  = abs(i);
+
+      double bpRadiusLower = m_beamPipe->radiusLower[iAbs];
+      double bpRadiusUpper = m_beamPipe->radiusUpper[iAbs];
+      double bpZPos        = iSign*m_beamPipe->zPos[iAbs];
+
+      // Linearize if beam-pipe defined in Z beyond the drawing +-Z window
+      if (fabs(bpZPos)>maxZ*vis_safety_factor) {
+
+        // Should never happen!
+        if (i==0) break;
+
+        // Adapt to maxZ if tilt not Pi/2. -> linear interpolation using tilt angle would diverge for +-Pi/2.
+        if (fabs(bpZPos)!=m_beamPipe->zPos[iAbs-1]) {
+
+          bpZPos   = iSign*maxZ*vis_safety_factor;
+
+          bpRadiusLower = (fabs(bpZPos)-m_beamPipe->zPos[iAbs-1])*m_beamPipe->getTiltLower(iAbs-1) + m_beamPipe->radiusLower[iAbs-1];
+          bpRadiusUpper = (fabs(bpZPos)-m_beamPipe->zPos[iAbs-1])*m_beamPipe->getTiltUpper(iAbs-1) + m_beamPipe->radiusUpper[iAbs-1];
+        }
+      }
+
+      if (fabs(bpZPos)<=maxZ*vis_safety_factor) {
+
+        beamPipeRZLower.SetPoint(i+iOffset, bpZPos, bpRadiusLower);
+        beamPipeRZUpper.SetPoint(i+iOffset, bpZPos, bpRadiusUpper);
+      }
+      else {
+
+        iOffset--;
+        continue;
+      }
+    }
+
+    beamPipeRZLower.SetLineColor(14);
+    beamPipeRZUpper.SetLineColor(14);
+    beamPipeRZLower.SetLineWidth(2);
+    beamPipeRZUpper.SetLineWidth(2);
     canvas.cd();
-    beamPipeRZ.DrawClone("same");
+    beamPipeRZLower.DrawClone("same");
+    beamPipeRZUpper.DrawClone("same");
   }
   else {
     logWARNING("DrawBeamPipeRZ failed: no beam pipe defined!");
@@ -673,15 +721,62 @@ void AnalyzerGeometry::drawBeamPipeRZ(TCanvas& canvas, double maxZ)
 void AnalyzerGeometry::drawBeamPipeXY(TCanvas& canvas)
 {
   if (m_beamPipe) {
-    double bpRadius = m_beamPipe->radius();
-    double bpThick  = m_beamPipe->thickness();
 
-    // Beam-pipe in XY
-    TEllipse beamPipeXY(0, 0, bpRadius + bpThick/2.);
-    beamPipeXY.SetFillColor(18); // "grey18"
-    beamPipeXY.SetFillStyle(1001);
-    canvas.cd();
-    beamPipeXY.DrawClone("same");
+    auto cmp = [](std::pair<double,double> a, std::pair<double,double> b) { return a.first>=b.first; };
+    set<std::pair<double,double>, decltype(cmp)> bpRZ(cmp);
+
+    // Get radii & sort them from highest to lowest (not to overdraw their shape in the end)
+    for (auto i=0; i<=m_beamPipe->getNSegments(); i++) {
+
+      double bpRadiusLower = m_beamPipe->radiusLower[i];
+      double bpRadiusUpper = m_beamPipe->radiusUpper[i];
+      double bpZPos        = m_beamPipe->zPos[i];
+      bpRZ.insert(std::pair<double,double>(bpRadiusLower,bpZPos));
+      bpRZ.insert(std::pair<double,double>(bpRadiusUpper,bpZPos));
+    }
+
+    int iElement = 0;
+    for (auto it=bpRZ.begin(); it!=bpRZ.end(); it++) {
+
+      double bpRadius = it->first;
+      double bpZPos   = it->second;
+
+      // Beam-pipe in XY
+      TEllipse beamPipeXY(0,0, bpRadius);
+
+      if (it==bpRZ.begin()) {
+
+        beamPipeXY.SetFillColor(19); // "grey19"
+        beamPipeXY.SetFillStyle(1001);
+      }
+      else if (std::next(it)==bpRZ.end()) {
+
+        beamPipeXY.SetFillColor(17); // "grey17"
+        beamPipeXY.SetFillStyle(1001);
+      }
+      else {
+
+        beamPipeXY.SetFillColor(18); // "grey18"
+        beamPipeXY.SetFillStyle(1001);
+      }
+
+      canvas.cd();
+      double maxCanvasR = 0;
+      for (int i=0; i<canvas.GetListOfPrimitives()->GetSize(); i++) {
+
+        TList* list = canvas.GetListOfPrimitives();
+
+        if (std::string(list->At(i)->ClassName())=="TH2C") {
+
+          TH2C* his          = (TH2C*)(list->At(i));
+          auto newMaxCanvasR = his->GetXaxis()->GetXmax();
+          if (newMaxCanvasR>maxCanvasR) maxCanvasR = newMaxCanvasR;
+        }
+      }
+
+      // Draw only if beam-pipe radius not bigger than scale of canvas
+      if (bpRadius<maxCanvasR) beamPipeXY.DrawClone("same");
+    }
   }
   else {
     logWARNING("DrawBeamPipeXY failed: no beam pipe defined!");
@@ -889,12 +984,12 @@ void VisitorLayerDiscSummary::visit(const DetectorModule& m) {
   m_moduleAvgStripOccupancy[tag] += m.stripOccupancyPerEvent()*nMinBiasEvents;
   m_moduleMaxHitOccupancy[tag]    = MAX(m.hitOccupancyPerEvent()*nMinBiasEvents  , m_moduleMaxHitOccupancy[tag]);
   m_moduleAvgHitOccupancy[tag]   += m.hitOccupancyPerEvent()*nMinBiasEvents;
-  m_moduleMaxRphiResolution[tag]  = MAX(m.resolutionLocalX(), m_moduleMaxRphiResolution[tag]);
-  m_moduleMinRphiResolution[tag]  = MIN(m.resolutionLocalX(), m_moduleMaxRphiResolution[tag]);
-  m_moduleAvgRphiResolution[tag] += m.resolutionLocalX();
-  m_moduleMaxZResolution[tag]     = MAX(m.resolutionLocalY(), m_moduleMaxZResolution[tag]);
-  m_moduleMinZResolution[tag]     = MIN(m.resolutionLocalY(), m_moduleMaxZResolution[tag]);
-  m_moduleAvgZResolution[tag]    += m.resolutionLocalY();
+  m_moduleMaxRphiResolution[tag]  = MAX(m.resLocalRPhi(), m_moduleMaxRphiResolution[tag]);
+  m_moduleMinRphiResolution[tag]  = MIN(m.resLocalRPhi(), m_moduleMaxRphiResolution[tag]);
+  m_moduleAvgRphiResolution[tag] += m.resLocalRPhi();
+  m_moduleMaxZResolution[tag]     = MAX(m.resLocalZ(), m_moduleMaxZResolution[tag]);
+  m_moduleMinZResolution[tag]     = MIN(m.resLocalZ(), m_moduleMaxZResolution[tag]);
+  m_moduleAvgZResolution[tag]    += m.resLocalZ();
   m_moduleAvgChannelsRPhi[tag]   += m.innerSensor().numStripsAcross();
   m_moduleAvgChannelsZ[tag]      += m.innerSensor().numSegments();
   m_moduleAvgROCs[tag]           += m.innerSensor().numROCX()*m.innerSensor().numROCY();
