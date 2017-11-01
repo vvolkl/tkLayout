@@ -33,7 +33,8 @@ included on the main web-site. They may contain various explanation texts, pictu
  fluence map (assumed to be provided on the input to tkLayout-lite -> not included within the standard SW config files).   
 
 Developed at CERN by Giovanni Bianchi, Nicoletta De Maio, Stefano Martina and Stefano Mersi. **tkLayout-lite** version 
-developed at CERN by Zbynek Drasal in collaboration with the tkLayout team `https://github.com/tkLayout`.
+developed at CERN by Zbynek Drasal in collaboration with the tkLayout team `https://github.com/tkLayout`. To support an 
+XML output, `tinyXML` library has been included within the project (c.f. `LICENSE_TinyXML` file).
 
 # Getting the code
 The code is accessible from an official github repository: `https://github.com/tkLayout` or author's github repository: 
