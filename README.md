@@ -29,8 +29,8 @@ mentioned:
  * AnalyzerOccupancy: report occupancy & date rates being estimated based on built-in geometry & Fluka charged particles 
  fluence map (assumed to be provided on the input to tkLayout-lite -> not included within the standard SW config files).   
 
-Developed at CERN by Giovanni Bianchi, Nicoletta De Maio, Stefano Martina and Stefano Mersi. tkLayout-lite version developed 
-at CERN by Zbynek Drasal in collaboration with the tkLayout team `https://github.com/tkLayout`.
+Developed at CERN by Giovanni Bianchi, Nicoletta De Maio, Stefano Martina and Stefano Mersi. **tkLayout-lite** version 
+developed at CERN by Zbynek Drasal in collaboration with the tkLayout team `https://github.com/tkLayout`.
 
 # Getting the code
 The code is accessible from an official github repository: `https://github.com/tkLayout` (use clone command to make a local copy):
@@ -49,15 +49,15 @@ Generally, one needs several libraries to be linked with the tkLayout-lite: a wo
 `root-config` should be in a user's path defined by `ROOTSYS` variable) and 2 specific **BOOST libraries**:
 
  * ROOT 6 library set (follow instructions on `https://root.cern.ch/downloading-root`)
- * boost_filesystem
- * boost_regex
+ * `boost_filesystem`
+ * `boost_regex`
 
-On CERN Lxplus machine, the procedure is quite straightforward, simply run a bash shell and source the following configuration 
-file before compilation:
+On CERN lxplus machine, the procedure is quite straightforward, simply run a bash shell and source the following configuration 
+file before the compilation:
 
     source setup_slc6.sh
 
-On local Linux machine, the environmental variables need to be set first in a local setup.sh file and then the file has to be 
+On local Linux machine, the environmental variables need to be set first in a local `setup.sh` file and then the file has to be 
 sourced:
 
  * `BOOST_LIB`: BOOST libs directory
@@ -66,6 +66,7 @@ sourced:
  BOOST installations 
  * `ROOTSYS`: ROOT 6 directory (`root-config` used by CMake to configure ROOT libs and includes for compilation is assumed to be 
  located in `ROOTSYS/bin`)
+
 
     source setup.sh
 
@@ -100,11 +101,12 @@ for the user and readable for the web server.
 4. Author of generated results
 
 ## Documentation
-Doxygen documentation is generated using **doc** option and all the generated html files are saved in tkLayout/doc/html directory.
+Doxygen documentation is generated using **doc** option and all the generated html files are saved in `tkLayout/doc/html` 
+directory.
 
 # Geometry description
-In order to ease the start-up with **tkLayout-lite** SW, several reference geometry descriptions have been included within 
-the SW package. They can be found in tkLayout `geometries` directory, namely `geometries/CMS` (for CMS Ph2 studies) and 
+In order to ease the start-up with the **tkLayout-lite** SW, several reference geometry descriptions have been included within 
+the SW package. They can be found in tkLayout-lite `geometries` directory, namely `geometries/CMS` (for CMS Ph2 studies) and 
 `geometries/FCC` (for FCC-hh studies). Create a `run` directory first, choose one of the geometries, e.g. `FCChh_v3.03`, 
 copy its content to the `run` directory and run tkLayout-lite here (using the main geometry configuration file as an 
 input parameter):
@@ -119,8 +121,8 @@ input parameter):
 The geometry description is defined and structured across several configuration files, one of which is the main config 
 file, e.g. `FCChh_v3.03.cfg`. The other files (like material description, individual modules description etc.) are included 
 to the main file using the directive commands `@include`. In addition to the main geometry configuration file, there 
-exist also a simulation run parameters file: **SimParms** and file specifying general settings: **.tkgeometryrc**. The 
-first one is included to the main config file by directive `@include`, the latter is automatically created once tkLayout 
+exist also a simulation run parameters file: `SimParms` and file specifying general settings: `.tkgeometryrc`. The 
+first one is included to the main config file by directive `@include`, the latter is automatically created once tkLayout-lite 
 is run for the first time in a user's home directory (see **First-time install** section). The `.tkgeometryrc` file may be 
 deleted, tkLayout will automatically create a new one and ask the user to redefine all of its values. This file may also be 
 directly modified by the user, the following parameters are particularly important:
@@ -130,8 +132,8 @@ directly modified by the user, the following parameters are particularly importa
     TKG_MOMENTA="1.0,2.0,5.0" -> Define individual values of transverse momenta in GeV/c
     TKG_PROJECT="FCC-hh" -> Define a project name
 
-# Run tkLayout
-To learn about the tkLayout functionality, simply run `tklayout` with no input parameters defined. The typical 
+# Run tkLayout-lite
+To learn about the tkLayout-lite functionality, simply run `tklayout` with no input parameters defined. The typical 
 configuration being used to study a tracker geometry, material budget and tracker resolution is the following:
 
     cd run
@@ -143,12 +145,12 @@ material or resolution calculations.
 The simulation results are automatically saved in a `results` directory, which is either newly created or rewritten under 
 geometry directory, e.g. `geometries/FCChh_v3.03/results`. Use any web browser on `results/index.html` file to display 
 all results in a compact way. The content of such directory may be deleted as it's being automatically rewritten each time 
-the tkLayout SW is being run on the same geometry configuration. The way, how the web browser displays the final results 
-depends on the cascade styles (being already predefined for tkLayout SW). Hence, one needs to make a symbolic link to a 
-**style** directory (predefined in tkLayout main directory). Similarly, some general configurations (material database etc.) 
-are predefined in **config** and **xml** directories. Make a symbolic link in a geometry directory to these too.
+the tkLayout-lite SW is being run on the same geometry configuration. The way, how the web browser displays the final results 
+depends on the cascade styles (being already predefined for the tkLayout SW). Hence, one needs to make a symbolic link to a 
+**style** directory (predefined in tkLayout-lite main directory). Similarly, some general configurations (material database 
+etc.) are predefined in **config** and **xml** directories. Make a symbolic link in a `geometries` directory to them.
 
-# Summary of tkLayout run options
+# Summary of tkLayout-lite run options
 The following tkLayout-lite functionality is currently supported:
 
     Analysis options:
@@ -193,6 +195,6 @@ To get the latest development version (usually still under development or being 
     make install
 
 # Compatibility disclaimer
-The developers of **tkLayout-lite** and **tkLayout** SW tried their best to provide the same core functionality in both 
-"flavours" of tkLayout, nevertheless not all the analysis options are the same. The tkLayout functionality is more focused 
-on CMS Phase 2 upgrade tracker needs, the tkLayout-lite on the other hand on FCC-hh tracker needs.   
+The developers of **tkLayout-lite** and **tkLayout** SWs tried their best to provide the same core functionality in both 
+"flavours" of tkLayout, nevertheless not all the analysis options are the same or being implemented. The tkLayout functionality is 
+more focused on CMS Phase 2 upgrade tracker needs, the tkLayout-lite on the other hand on FCC-hh tracker needs.   
