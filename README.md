@@ -149,45 +149,50 @@ depends on the cascade styles (being already predefined for tkLayout SW). Hence,
 are predefined in **config** and **xml** directories. Make a symbolic link in a geometry directory to these too.
 
 # Summary of tkLayout run options
-The following tkLayout functionality is currently supported:
+The following tkLayout-lite functionality is currently supported:
 
-  Analysis options:
-  -h [ --help ]                       Display help info.
-  --opt-file arg                      Specify an option file to parse the 
-                                      program options from (in addition to 
-                                      command line).
-  -n [ --geometry-tracks ] arg (=100) Number of tracks for geometry 
-                                      calculations.
-  -N [ --material-tracks ] arg (=100) Number of tracks for material & 
-                                      resolution calculations.
-  -o [ --occupancy ]                  Report occupancy studies based on Fluka 
-                                      data.
-  -g [ --geometry ]                   Report geometry layout.
-  -m [ --material ]                   Report material budget.
-  -p [ --patternreco ]                Report pattern recognition capabilities 
-                                      in given occupancy (using Fluka data).
-  -r [ --resolution ]                 Report resolution studies.
-  -a [ --all ]                        Report all studies.
-  -e [ --extraction ] arg (=CMS FCC)  Extract tkLayout geometry to an XML file 
-                                      to be used in CMS/FCC SW frameworks. 
-                                      Supported values: CMS or FCC.
-  --verbosity arg (=1)                Verbosity level (Overridden by the option
-                                      'quiet').
-  --quiet                             No output produced (Equivalent to 
-                                      verbosity 0, overrides the 'verbosity' 
-                                      option).
-  --performance                       Outputs the CPU time needed for each 
-                                      computing step (Overrides the option 
-                                      'quiet').
+    Analysis options:
+    -h [ --help ]                       Display help info.
+    --opt-file arg                      Specify an option file to parse the 
+                                        program options from (in addition to 
+                                        command line).
+    -n [ --geometry-tracks ] arg (=100) Number of tracks for geometry 
+                                        calculations.
+    -N [ --material-tracks ] arg (=100) Number of tracks for material & 
+                                        resolution calculations.
+    -o [ --occupancy ]                  Report occupancy studies based on Fluka 
+                                        data.
+    -g [ --geometry ]                   Report geometry layout.
+    -m [ --material ]                   Report material budget.
+    -p [ --patternreco ]                Report pattern recognition capabilities 
+                                        in given occupancy (using Fluka data).
+    -r [ --resolution ]                 Report resolution studies.
+    -a [ --all ]                        Report all studies.
+    -e [ --extraction ] arg (=CMS FCC)  Extract tkLayout geometry to an XML file 
+                                        to be used in CMS/FCC SW frameworks. 
+                                        Supported values: CMS or FCC.
+    --verbosity arg (=1)                Verbosity level (Overridden by the option
+                                        'quiet').
+    --quiet                             No output produced (Equivalent to 
+                                        verbosity 0, overrides the 'verbosity' 
+                                        option).
+    --performance                       Outputs the CPU time needed for each 
+                                        computing step (Overrides the option 
+                                        'quiet').
  
-In order to study `--patternreco` and `--occupancy`, Fluka charged particles fluence map has to be provided in `config` 
-directory. As the `--all` option studies all analyses together, the Fluka map is also required there on input.
+In order to study the `--patternreco` and `--occupancy` options, a Fluka charged particles fluence map has to be provided in `config` 
+directory. As the `--all` option is meant to study all available analysis options together, the Fluka map is also required there on 
+input.
 
 # Update
-To get the latest development version (usually UNSTABLE) one simply types:
+To get the latest development version (usually still under development or being tested) one simply types:
 
     git fetch
     git chechout masterLite (or devLite)
     make
     make install
-  
+
+# Compatibility disclaimer
+The developers of **tkLayout-lite** and **tkLayout** SW tried their best to provide the same core functionality in both 
+"flavours" of tkLayout, nevertheless not all the analysis options are the same. The tkLayout functionality is more focused 
+on CMS Phase 2 upgrade tracker needs, the tkLayout-lite on the other hand on FCC-hh tracker needs.   
