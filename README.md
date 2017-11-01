@@ -33,7 +33,7 @@ Developed at CERN by Giovanni Bianchi, Nicoletta De Maio, Stefano Martina and St
 developed at CERN by Zbynek Drasal in collaboration with the tkLayout team `https://github.com/tkLayout`.
 
 # Getting the code
-The code is accessible from an official github repository: `https://github.com/tkLayout` (use clone command to make a local copy):
+The code is accessible from an official github repository: `https://github.com/tkLayout` or author's github repository: `https://github.com/drasal/tkLayout` (use clone command to make a local copy):
 
     git clone -b masterLite https://github.com/drasal/tkLayout.git
     cd tkLayout
