@@ -195,7 +195,7 @@ also required there on input.
 To get the latest development version (usually still under development or being tested) one simply types:
 
     git fetch
-    git chechout masterLite (or devLite)
+    git checkout masterLite (or devLite)
     make
     make install
 
