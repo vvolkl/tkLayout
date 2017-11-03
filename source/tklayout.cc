@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
 
   //
   // Set verbosity
-  bool         verboseMaterial  = false;
+  //bool         verboseMaterial  = false;
   unsigned int verboseWatch     = verbosity;
   bool         performanceWatch = false ;
 

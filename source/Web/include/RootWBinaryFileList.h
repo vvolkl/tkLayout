@@ -29,15 +29,15 @@ class RootWBinaryFileList : public RootWFileList {
   //! Default constructor
   RootWBinaryFileList();
   //! Constructor defining list of file names using iterators
-  template<class I> RootWBinaryFileList(I begin, I end) : RootWFileList(begin, end) {};
-  template<class I> RootWBinaryFileList(I begin, I end, std::string newDescription) : RootWFileList(begin, end, newDescription) {};
+  template<class I> RootWBinaryFileList(I begin, I end) : RootWFileList(begin, end) {}
+  template<class I> RootWBinaryFileList(I begin, I end, std::string newDescription) : RootWFileList(begin, end, newDescription) {}
   template<class I, class J> RootWBinaryFileList(I beginDestNames, I endDestNames, std::string newDescription, J beginOrigNames, J endOrigNames) :
-   RootWFileList(beginDestNames, endDestNames, newDescription) {setOriginalFiles(beginOrigNames, endOrigNames);};
+   RootWFileList(beginDestNames, endDestNames, newDescription) {setOriginalFiles(beginOrigNames, endOrigNames);}
   // Default destructor
   ~RootWBinaryFileList();
 
   //! Define names of original binary files, to be copied to the target directory & linked on the web page
-  template<class I> void setOriginalFiles(I begin, I end) {m_originalFileNames.insert(m_originalFileNames.end(), begin, end);};
+  template<class I> void setOriginalFiles(I begin, I end) {m_originalFileNames.insert(m_originalFileNames.end(), begin, end);}
 
   //! Dump method - create copy of original binary files & create links on the web page to these files
   std::ostream& dump(std::ostream& output);

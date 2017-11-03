@@ -102,9 +102,9 @@ Polygon3D<4>* Sensor::buildOwnPoly(double polyOffset) const {
 //
 void Sensor::clearPolys() { 
 
-  if (m_hitPoly     !=nullptr) delete m_hitPoly;      m_hitPoly      = nullptr;
-  if (m_lowerEnvPoly!=nullptr) delete m_lowerEnvPoly; m_lowerEnvPoly = nullptr;
-  if (m_upperEnvPoly!=nullptr) delete m_upperEnvPoly; m_upperEnvPoly = nullptr;
+  if (m_hitPoly     !=nullptr) { delete m_hitPoly;      m_hitPoly      = nullptr; }
+  if (m_lowerEnvPoly!=nullptr) { delete m_lowerEnvPoly; m_lowerEnvPoly = nullptr; }
+  if (m_upperEnvPoly!=nullptr) { delete m_upperEnvPoly; m_upperEnvPoly = nullptr; }
 }
 
 //

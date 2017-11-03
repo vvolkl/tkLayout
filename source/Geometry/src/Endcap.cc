@@ -138,7 +138,7 @@ vector<double> Endcap::findMaxDsDistances()
   vector<double> maxDsDistances;
   double endcapDsDistance = propertyTree().get("dsDistance", 0.);
 
-  PropertyNode<int> ringNode("");
+  PropertyNode<unsigned int> ringNode("");
   for (auto& tel : pair2range(propertyTree().equal_range("Ring"))) // scan Ring subtrees outside Disks
     ringNode.fromPtree(tel.second);
   for (auto& rnel : ringNode) {

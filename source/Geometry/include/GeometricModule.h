@@ -25,7 +25,7 @@ using std::array;
 // Definition of global function
 namespace ModuleHelpers {
   double polygonAperture(const Polygon3D<4>& poly);
-};
+}
 
 // Enum definition related to geometrical shape of modules
 enum ModuleShape { RECTANGULAR, WEDGE };

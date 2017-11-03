@@ -1111,7 +1111,7 @@ namespace material {
 
     bool retValue = false;
 
-    int startTime = time(0);
+    //int startTime = time(0);
     startTaskClock("Building boundaries");
     if (buildBoundaries(tracker)) {
       stopTaskClock();
@@ -1181,7 +1181,6 @@ namespace material {
 
   void Materialway::buildExternalSections(const Tracker& tracker) {
     //for(Boundary& boundary : boundariesList_) {
-    int i=0;
     for(BoundariesSet::iterator it = boundariesList_.begin(); it != boundariesList_.end(); ++it) {
       //if(i++==0)
       outerUsher.go(const_cast<Boundary*>(*it), tracker, VERTICAL);

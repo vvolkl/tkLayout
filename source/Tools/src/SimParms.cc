@@ -105,7 +105,7 @@ void SimParms::crosscheck() {
 
   // Check that magnetic field non-zero in at least one interval
   bool nonZero = false;
-  for (auto i=0; i<magFieldZRegions.size(); i++) {
+  for (unsigned int i=0; i<magFieldZRegions.size(); i++) {
     if (magField[i]>0) nonZero = true;
   }
   if (nonZero!=true) throw PathfulException("Magnetic field needs to be defined non-zero in at least one Z interval!" , "SimParms");

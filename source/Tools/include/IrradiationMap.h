@@ -102,21 +102,25 @@ public:
   inline bool isOfTypeMesh()      const {return m_typeMesh;};
 
 private:
-  const std::string comp_dataUnit    = "# Data unit: ";          /**< Prefix of the line of the header of the feeded file that precedes the value of flux unit*/
-  const std::string comp_rUnit       = "# R unit: ";             /**< Prefix of the line of the header of the feeded file that precedes the value of rho unit*/
-  const std::string comp_rMin        = "# R min: ";              /**< Prefix of the line of the header of the feeded file that precedes the value of min rho*/
-  const std::string comp_rMax        = "# R max: ";              /**< Prefix of the line of the header of the feeded file that precedes the value of max rho*/
-  const std::string comp_rBinWidth   = "# R bin width: ";        /**< Prefix of the line of the header of the feeded file that precedes the value of bin width in rho*/
-  const std::string comp_rBinNum     = "# R number of bins: ";   /**< Prefix of the line of the header of the feeded file that precedes the value of the number of bins in rho*/
-  const std::string comp_zUnit       = "# Z unit: ";             /**< Prefix of the line of the header of the feeded file that precedes the value of Z unit*/
-  const std::string comp_zMin        = "# Z min: ";              /**< Prefix of the line of the header of the feeded file that precedes the value of min Z*/
-  const std::string comp_zMax        = "# Z max: ";              /**< Prefix of the line of the header of the feeded file that precedes the value of max Z*/
-  const std::string comp_zBinWidth   = "# Z bin width: ";        /**< Prefix of the line of the header of the feeded file that precedes the value of bin width in Z*/
-  const std::string comp_zBinNum     = "# Z number of bins: ";   /**< Prefix of the line of the header of the feeded file that precedes the value of the number of bins in Z*/
-  const std::string comp_norm        = "# normalization value: ";/**< Prefix of the line of the header of the feeded file that precedes the value of the normalization value in fb^-1*/
-  const std::string comp_EscValue    = "/t";
-  const std::string comp_EscLine     = "/n";
-  const std::string comp_EscComment  = "#//;";
+  const std::string c_fileDataUnit    = "# Data unit: ";          /**< Prefix of the line of the header of the feeded file that precedes the value of flux unit*/
+  const std::string c_fileRUnit       = "# R unit: ";             /**< Prefix of the line of the header of the feeded file that precedes the value of rho unit*/
+  const std::string c_fileRMin        = "# R min: ";              /**< Prefix of the line of the header of the feeded file that precedes the value of min rho*/
+  const std::string c_fileRMax        = "# R max: ";              /**< Prefix of the line of the header of the feeded file that precedes the value of max rho*/
+  const std::string c_fileRBinWidth   = "# R bin width: ";        /**< Prefix of the line of the header of the feeded file that precedes the value of bin width in rho*/
+  const std::string c_fileRBinNum     = "# R number of bins: ";   /**< Prefix of the line of the header of the feeded file that precedes the value of the number of bins in rho*/
+  const std::string c_fileZUnit       = "# Z unit: ";             /**< Prefix of the line of the header of the feeded file that precedes the value of Z unit*/
+  const std::string c_fileZMin        = "# Z min: ";              /**< Prefix of the line of the header of the feeded file that precedes the value of min Z*/
+  const std::string c_fileZMax        = "# Z max: ";              /**< Prefix of the line of the header of the feeded file that precedes the value of max Z*/
+  const std::string c_fileZBinWidth   = "# Z bin width: ";        /**< Prefix of the line of the header of the feeded file that precedes the value of bin width in Z*/
+  const std::string c_fileZBinNum     = "# Z number of bins: ";   /**< Prefix of the line of the header of the feeded file that precedes the value of the number of bins in Z*/
+  const std::string c_fileNorm        = "# normalization value: ";/**< Prefix of the line of the header of the feeded file that precedes the value of the normalization value in fb^-1*/
+  const std::string c_fileEscTabMS    = "\t";                     /**< File - special character: tabulator used between values - Microsoft coding*/
+  const std::string c_fileEscTab      = "/t";                     /**< File - special character: tabulator used between values*/
+  const std::string c_fileEscLineMS   = "\n";                     /**< File - special character: newline used at the end of line - Microsoft coding*/
+  const std::string c_fileEscReturnMS = "\r";                     /**< File - special character: carriage return used at the end of line - Microsoft coding*/
+  const std::string c_fileEscLine     = "/n";                     /**< File - special character: newline used at the end of line*/
+  const std::string c_fileEscWhiteSpc = " ";                      /**< File - special character: white space*/
+  const std::string c_fileEscComment  = "#//;";                   /**< File - special character used for comment*/
 
   std::string m_fileName;    /**< File name with irradiation data and predefined header*/
   std::string m_dataUnit;    /**< Flux unit*/

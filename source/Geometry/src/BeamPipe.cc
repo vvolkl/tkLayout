@@ -88,8 +88,8 @@ void BeamPipe::check() {
 //
 void BeamPipe::setup() {
 
-  maxRadius.setup([&]() { double max = 0;                                  for (auto i=0; i<radiusUpper.size(); i++) { max = MAX(max, radiusUpper[i]); } return max; });
-  minRadius.setup([&]() { double min = std::numeric_limits<double>::max(); for (auto i=0; i<radiusLower.size(); i++) { min = MIN(min, radiusLower[i]); } return min; });;
+  maxRadius.setup([&]() { double max = 0;                                  for (unsigned int i=0; i<radiusUpper.size(); i++) { max = MAX(max, radiusUpper[i]); } return max; });
+  minRadius.setup([&]() { double min = std::numeric_limits<double>::max(); for (unsigned int i=0; i<radiusLower.size(); i++) { min = MIN(min, radiusLower[i]); } return min; });;
 }
 
 //

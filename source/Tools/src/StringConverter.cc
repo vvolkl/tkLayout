@@ -13,7 +13,7 @@ template<typename T> const std::vector<std::string> EnumTraits<T>::data = {};
 //
 // String to any, if any is string
 //
-template<> std::string StringConverter<_NOT_STRING_ENUM>::str2any<std::string>(const std::string& from) { return from; };
+template<> std::string StringConverter<_NOT_STRING_ENUM>::str2any<std::string>(const std::string& from) { return from; }
 
 //
 // String to any, if any is boolean

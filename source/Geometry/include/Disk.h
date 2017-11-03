@@ -128,7 +128,7 @@ class Disk : public PropertyObject, public Buildable, public Identifiable<int>, 
   PropertyNode<int>               m_ringNode;     //!< Property tree node for ring (to grab properties for specific ring modules)
   PropertyNodeUnique<std::string> m_stationsNode; //!< Property tree nodes for conversion stations (included geometry config file)
 
-  inline double getDsDistance(const vector<double>& buildDsDistances, int rindex) const;
+  inline double getDsDistance(const vector<double>& buildDsDistances, unsigned int rindex) const;
 }; // Class
 
 #endif /* INCLUDE_DISK_H_ */

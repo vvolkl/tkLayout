@@ -456,10 +456,10 @@ double Track::getDeltaT(double refPointRPos) {
   for (auto& iHit : m_timeHits) {
 
     double radius    = getRadius(iHit->getZPos());
-    double deltaR    = iHit->getRPos() - refPointRPos;
+    //double deltaR    = iHit->getRPos() - refPointRPos;
     double deltaZ    = iHit->getZPos() - refPointRPos*getCotgTheta();
-    double sinTheta  = sin(this->getTheta());
-    double cotgTheta = m_cotgTheta;
+    //double sinTheta  = sin(this->getTheta());
+    //double cotgTheta = m_cotgTheta;
     double cosTilt   = cos(iHit->getTilt());
     double sinTilt   = sin(iHit->getTilt());
 
@@ -1123,7 +1123,7 @@ bool Track::computeCovarianceMatrix(double refPointRPos, bool propagOutIn) {
   int nActiveHitsUsed = 0;
 
   bool bySmallerR = true;
-  bool useIP      = false;
+  //bool useIP      = false;
 
   // Particle traverses inside-out with error propagation outside-in -> hits already sorted correctlly
   if (m_pt>=0 && propagOutIn) {
@@ -1201,10 +1201,10 @@ bool Track::computeCovarianceMatrix(double refPointRPos, bool propagOutIn) {
 
     double beta_c       = m_hits[c]->getBeta();
     double sinBeta_c    = m_hits[c]->getSinBeta();
-    double cosBeta_c    = m_hits[c]->getCosBeta();
+    //double cosBeta_c    = m_hits[c]->getCosBeta();
     double rPos_c       = m_hits[c]->getRPos();
     double rPhiLength_c = m_hits[c]->getRPhiLength();
-    double rPosSq_c     = rPos_c*rPos_c;
+    //double rPosSq_c     = rPos_c*rPos_c;
 
     // Dummy value for correlations involving inactive surfaces
     if (m_hits[c]->isPassive()) {
@@ -1240,19 +1240,19 @@ bool Track::computeCovarianceMatrix(double refPointRPos, bool propagOutIn) {
 
           double beta_r       = m_hits[r]->getBeta();
           double sinBeta_r    = m_hits[r]->getSinBeta();
-          double cosBeta_r    = m_hits[r]->getCosBeta();
+          //double cosBeta_r    = m_hits[r]->getCosBeta();
           double rPos_r       = m_hits[r]->getRPos();
           double rPhiLength_r = m_hits[r]->getRPhiLength();
-          double rPosSq_r     = rPos_r*rPos_r;
+          //double rPosSq_r     = rPos_r*rPos_r;
 
           for (int i=iStart; i<r; i++) {
 
             double beta_i       = m_hits[i]->getBeta();
-            double sinBeta_i    = m_hits[i]->getSinBeta();
-            double cosBeta_i    = m_hits[i]->getCosBeta();
+            //double sinBeta_i    = m_hits[i]->getSinBeta();
+            //double cosBeta_i    = m_hits[i]->getCosBeta();
             double rPos_i       = m_hits[i]->getRPos();
             double rPhiLength_i = m_hits[i]->getRPhiLength();
-            double rPosSq_i     = rPos_i*rPos_i;
+            //double rPosSq_i     = rPos_i*rPos_i;
 
             if (SimParms::getInstance().useParabolicApprox()) {
 
@@ -1261,7 +1261,7 @@ bool Track::computeCovarianceMatrix(double refPointRPos, bool propagOutIn) {
             }
             else {
 
-              double trackR = getRadius(0.);
+              //double trackR = getRadius(0.);
 
               double beta_ci = beta_c - beta_i;
               double beta_ri = beta_r - beta_i;

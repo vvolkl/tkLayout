@@ -354,7 +354,7 @@ void OccupancyVisitor::visit(const Layer& layer) {
 
      int nSegments         = s.numSegments();
      int nStrips           = s.numStripsAcross();
-     SensorType sensorType = s.type();
+     //SensorType sensorType = s.type();
 
      if (iSensor>=2) {
        logWARNING("Occupancy studies - module contains more than 2 sensors -> check the code, data rate will be wrong!");
@@ -509,10 +509,10 @@ void OccupancyVisitor::visit(const Ring& ring) {
 
 void OccupancyVisitor::visit(const EndcapModule& module) {
 
-  static int countModPls = 0;
+  //static int countModPls = 0;
   if ((module.planarMaxZ()+module.planarMinZ())/2.<0) return;
 
-  int    iDisk    = m_nDisks-1;
+  //int    iDisk    = m_nDisks-1;
   double zPos     = fabs((module.planarMaxZ()+module.planarMinZ())/2.);
   double rPos     = (module.planarMaxR()+module.planarMinR())/2.;
   long   nHits    = module.area() * m_chargedMap->calculateIrradiationZR(zPos, rPos)/Units::mm2 * m_maxPileUp;
@@ -525,7 +525,7 @@ void OccupancyVisitor::visit(const EndcapModule& module) {
 
     int nSegments         = s.numSegments();
     int nStrips           = s.numStripsAcross();
-    SensorType sensorType = s.type();
+    //SensorType sensorType = s.type();
 
     if (iSensor>=2) {
       logWARNING("Occupancy studies - module contains more than 2 sensors -> check the code, data rate will be wrong!");

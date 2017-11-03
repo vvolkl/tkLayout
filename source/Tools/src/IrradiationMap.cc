@@ -47,7 +47,7 @@ void IrradiationMap::ingest(std::string fileName) {
   bool   found_zMax       = false;
   bool   found_zBinWidth  = false;
   bool   found_zBinNum    = false;
-  bool   found_norm       = false;
+  //bool   found_norm       = false;
   double irradiationValue = 0;
 
   std::string m_fileName = fileName;
@@ -64,104 +64,107 @@ void IrradiationMap::ingest(std::string fileName) {
 
   while(std::getline(filein, line)) {
     //find fluxUnit
-    if (line.find(comp_dataUnit) == 0) {
-      line.erase(0,comp_dataUnit.length());
+    if (line.find(c_fileDataUnit) == 0) {
+      line.erase(0,c_fileDataUnit.length());
       m_dataUnit = line;
-      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), comp_EscLine.c_str() ), m_dataUnit.end());
-      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), '\r'), m_dataUnit.end());
-      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), '\n'), m_dataUnit.end());
-      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), ' ' ), m_dataUnit.end());
-      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), comp_EscValue.c_str()), m_dataUnit.end());
+      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), *c_fileEscLineMS.c_str()  ), m_dataUnit.end());
+      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), *c_fileEscReturnMS.c_str()), m_dataUnit.end());
+      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), *c_fileEscLine.c_str()    ), m_dataUnit.end());
+      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), *c_fileEscTabMS.c_str()   ), m_dataUnit.end());
+      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), *c_fileEscTab.c_str()     ), m_dataUnit.end());
+      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), *c_fileEscWhiteSpc.c_str()), m_dataUnit.end());
       continue;
     }
     //find rUnit
-    if (line.find(comp_rUnit) == 0) {
-      line.erase(0,comp_rUnit.length());
+    if (line.find(c_fileRUnit) == 0) {
+      line.erase(0,c_fileRUnit.length());
       m_rUnit = line;
-      m_rUnit.erase(std::remove(m_rUnit.begin(), m_rUnit.end(), comp_EscLine.c_str() ), m_rUnit.end());
-      m_rUnit.erase(std::remove(m_rUnit.begin(), m_rUnit.end(), '\r'), m_rUnit.end());
-      m_rUnit.erase(std::remove(m_rUnit.begin(), m_rUnit.end(), '\n'), m_rUnit.end());
-      m_rUnit.erase(std::remove(m_rUnit.begin(), m_rUnit.end(), ' ' ), m_rUnit.end());
-      m_rUnit.erase(std::remove(m_rUnit.begin(), m_rUnit.end(), comp_EscValue.c_str()), m_rUnit.end());
+      m_rUnit.erase(std::remove(m_rUnit.begin(), m_rUnit.end(), *c_fileEscLineMS.c_str()  ), m_rUnit.end());
+      m_rUnit.erase(std::remove(m_rUnit.begin(), m_rUnit.end(), *c_fileEscReturnMS.c_str()), m_rUnit.end());
+      m_rUnit.erase(std::remove(m_rUnit.begin(), m_rUnit.end(), *c_fileEscLine.c_str()    ), m_rUnit.end());
+      m_rUnit.erase(std::remove(m_rUnit.begin(), m_rUnit.end(), *c_fileEscTabMS.c_str()   ), m_rUnit.end());
+      m_rUnit.erase(std::remove(m_rUnit.begin(), m_rUnit.end(), *c_fileEscTab.c_str()     ), m_rUnit.end());
+      m_rUnit.erase(std::remove(m_rUnit.begin(), m_rUnit.end(), *c_fileEscWhiteSpc.c_str()), m_rUnit.end());
       continue;
     }
     //find rMin
-    if (line.find(comp_rMin) == 0) {
-      line.erase(0,comp_rMin.length());
+    if (line.find(c_fileRMin) == 0) {
+      line.erase(0,c_fileRMin.length());
       m_rMin = strtod(line.c_str(),NULL);
       found_rMin = true;
       continue;
     }
     //find rMax
-    if (line.find(comp_rMax) == 0) {
-      line.erase(0,comp_rMax.length());
+    if (line.find(c_fileRMax) == 0) {
+      line.erase(0,c_fileRMax.length());
       m_rMax = strtod(line.c_str(),NULL);
       found_rMax = true;
       continue;
     }
     //find rBinWidth
-    if (line.find(comp_rBinWidth) == 0) {
-      line.erase(0,comp_rBinWidth.length());
+    if (line.find(c_fileRBinWidth) == 0) {
+      line.erase(0,c_fileRBinWidth.length());
       m_rBinWidth = strtod(line.c_str(),NULL);
       found_rBinWidth = true;
       continue;
     }
     //find rBinNum
-    if (line.find(comp_rBinNum) == 0) {
-      line.erase(0,comp_rBinNum.length());
+    if (line.find(c_fileRBinNum) == 0) {
+      line.erase(0,c_fileRBinNum.length());
       m_rBinNum = strtol(line.c_str(),NULL,10);
       found_rBinNum = true;
       continue;
     }
     //find zUnit
-    if (line.find(comp_zUnit) == 0) {
-      line.erase(0,comp_zUnit.length());
+    if (line.find(c_fileZUnit) == 0) {
+      line.erase(0,c_fileZUnit.length());
       m_zUnit = line;
-      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), comp_EscLine.c_str() ), m_zUnit.end());
-      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), '\r'), m_zUnit.end());
-      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), '\n'), m_zUnit.end());
-      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), ' ' ), m_zUnit.end());
-      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), comp_EscValue.c_str()), m_zUnit.end());
+      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), *c_fileEscLineMS.c_str()  ), m_zUnit.end());
+      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), *c_fileEscReturnMS.c_str()), m_zUnit.end());
+      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), *c_fileEscLine.c_str()    ), m_zUnit.end());
+      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), *c_fileEscTabMS.c_str()   ), m_zUnit.end());
+      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), *c_fileEscTab.c_str()     ), m_zUnit.end());
+      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), *c_fileEscWhiteSpc.c_str()), m_zUnit.end());
       continue;
     }
     //find zMin
-    if (line.find(comp_zMin) == 0) {
-      line.erase(0,comp_zMin.length());
+    if (line.find(c_fileZMin) == 0) {
+      line.erase(0,c_fileZMin.length());
       m_zMin = strtod(line.c_str(),NULL);
       found_zMin = true;
       continue;
     }
     //find zMax
-    if (line.find(comp_zMax) == 0) {
-      line.erase(0,comp_zMax.length());
+    if (line.find(c_fileZMax) == 0) {
+      line.erase(0,c_fileZMax.length());
       m_zMax = strtod(line.c_str(),NULL);
       found_zMax = true;
       continue;
     }
     //find zBinWidth
-    if (line.find(comp_zBinWidth) == 0) {
-      line.erase(0,comp_zBinWidth.length());
+    if (line.find(c_fileZBinWidth) == 0) {
+      line.erase(0,c_fileZBinWidth.length());
       m_zBinWidth = strtod(line.c_str(),NULL);
       found_zBinWidth = true;
       continue;
     }
     //find zBinNum
-    if (line.find(comp_zBinNum) == 0) {
-      line.erase(0,comp_zBinNum.length());
+    if (line.find(c_fileZBinNum) == 0) {
+      line.erase(0,c_fileZBinNum.length());
       m_zBinNum = strtol(line.c_str(),NULL,10);
       found_zBinNum = true;
       continue;
     }
     //find normalization (invFemUnit)
-    if (line.find(comp_norm) == 0) {
-      line.erase(0,comp_norm.length());
+    if (line.find(c_fileNorm) == 0) {
+      line.erase(0,c_fileNorm.length());
       m_norm = strtol(line.c_str(),NULL,10);
-      found_norm = true;
+      //found_norm = true;
       continue;
     }
 
     //skip other comment or empty lines
-    if (line.find_first_of(comp_EscComment)==0 || line=="") continue;
+    if (line.find_first_of(c_fileEscComment)==0 || line=="") continue;
 
     // Check that all values defined
     if (!init) {

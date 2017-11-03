@@ -47,7 +47,7 @@ AnalyzerMatBudget::AnalyzerMatBudget(const Detector& detector) : AnalyzerUnit("A
  m_etaMin(-1*SimParms::getInstance().getMaxEtaCoverage()),
  m_etaMax(+1*SimParms::getInstance().getMaxEtaCoverage()),
  m_nBins(100)
-{};
+{}
 
 //
 // Destructor
@@ -70,7 +70,7 @@ bool AnalyzerMatBudget::init(int nMatTracks)
   double etaMin = -1*SimParms::getInstance().getMaxEtaCoverage();
   double etaMax = +1*SimParms::getInstance().getMaxEtaCoverage();
 
-  float  safeMargin = c_etaSafetyMargin;
+  //float  safeMargin = c_etaSafetyMargin;
   m_etaSpan         = (etaMax - etaMin);//*(1. + safeMargin);
   m_etaMax          = etaMax;// * (1 + safeMargin);
 
@@ -103,7 +103,7 @@ bool AnalyzerMatBudget::init(int nMatTracks)
     m_csvMatBudget = std::unique_ptr<CsvTextBuilder>(new CsvTextBuilder());
 
     // Prepare histogram containers for each subdetector (components will be initialized on the fly)
-    for (int iTrk=0; iTrk<=m_trackers.size(); iTrk++) {
+    for (unsigned int iTrk=0; iTrk<=m_trackers.size(); iTrk++) {
 
       // Tracker name
       std::string trkName;
@@ -185,7 +185,7 @@ bool AnalyzerMatBudget::init(int nMatTracks)
 
       // Prepare the plots for the track survival fraction
       ostringstream tempSS;
-      for (auto i=0; i<m_hadronNeededHitsFraction[trkName].size(); ++i) {
+      for (unsigned int i=0; i<m_hadronNeededHitsFraction[trkName].size(); ++i) {
         tempSS.str("");
         tempSS << "hadronGoodTracksFraction" << trkName << "_at" << m_hadronNeededHitsFraction[trkName].at(i);
         TGraph myGraph;
@@ -471,7 +471,7 @@ bool AnalyzerMatBudget::visualize(RootWSite& webSite)
   // Set Rainbow palette for drawing
   Palette::setRootPalette();
 
-  for (int iTrk=0; iTrk<=m_trackers.size(); iTrk++) {
+  for (unsigned int iTrk=0; iTrk<=m_trackers.size(); iTrk++) {
 
     // Tracker name
     const Tracker* tracker = nullptr;
@@ -897,7 +897,7 @@ bool AnalyzerMatBudget::visualize(RootWSite& webSite)
         etaCuts.push_back(iCut);
       }
 
-      for (auto i=0; i<m_hadronGoodTracksFraction[trkName].size(); ++i) {
+      for (unsigned int i=0; i<m_hadronGoodTracksFraction[trkName].size(); ++i) {
 
         TGraph& myGraph = m_hadronGoodTracksFraction[trkName].at(i);
         //std::cerr << "Good Hadrons fractions at (" << i <<") has " << myGraph.GetN() << " points" << std::endl;
@@ -1107,7 +1107,7 @@ void VisitorMatBudget::visit(const BeamPipe& bp)
   //
   // Add hit corresponding with beam-pipe
   double theta = m_matTrack.getTheta();
-  double eta   = m_matTrack.getEta();
+  //double eta   = m_matTrack.getEta();
   double z0    = m_matTrack.getOrigin().Z();
 
   // Eta assumed to be positive so, theta between 0-90deg, hence material is always given as firstUpper-firstLower hit, secondUpper-secondLower etc. -> sort from lowest to highest Z
@@ -1195,7 +1195,7 @@ void VisitorMatBudget::visit(const BeamPipe& bp)
   // Form hits
   else {
 
-    for (auto i=0; i<bpZRLower.size(); i++) {
+    for (unsigned int i=0; i<bpZRLower.size(); i++) {
 
       double pathLength  = 0;
       double rPosAvg     = 0;

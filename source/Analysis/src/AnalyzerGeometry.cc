@@ -47,7 +47,7 @@ AnalyzerGeometry::AnalyzerGeometry(const Detector& detector) : AnalyzerUnit("Ana
  m_etaMin(-1*SimParms::getInstance().getMaxEtaCoverage()),
  m_etaMax(+1*SimParms::getInstance().getMaxEtaCoverage())
 {
-};
+}
 
 //
 // Destructor
@@ -445,7 +445,7 @@ bool AnalyzerGeometry::visualize(RootWSite& webSite)
     // Plots
     RootWContent& myContentPlots = myPage.addContent("Layout plots");
 
-    RootWImage* myImage;
+    //RootWImage* myImage;
 
     // R-Z view - avoid drawing canvas if barrel and endcap missing
     PlotDrawer<RZ, Type> rzDrawer;
@@ -735,11 +735,10 @@ void AnalyzerGeometry::drawBeamPipeXY(TCanvas& canvas)
       bpRZ.insert(std::pair<double,double>(bpRadiusUpper,bpZPos));
     }
 
-    int iElement = 0;
     for (auto it=bpRZ.begin(); it!=bpRZ.end(); it++) {
 
       double bpRadius = it->first;
-      double bpZPos   = it->second;
+      //double bpZPos   = it->second;
 
       // Beam-pipe in XY
       TEllipse beamPipeXY(0,0, bpRadius);
@@ -831,7 +830,7 @@ void VisitorLayerName::visit(const Disk& d)   { m_data[m_idTRK].insert(m_idBRLor
 //
 // VisitorLayerName destructor
 //
-VisitorLayerDiscSummary::~VisitorLayerDiscSummary() {};
+VisitorLayerDiscSummary::~VisitorLayerDiscSummary() {}
 
 //
 // VisitorLayerDiscSummary preVisit method - initialize
@@ -1028,7 +1027,7 @@ void VisitorLayerDiscSummary::postVisit() {
   for (auto& iter : m_moduleCount) {
 
     auto tag   = iter.first;
-    auto count = iter.second;
+    //auto count = iter.second;
 
     if (m_moduleCount[tag]>0) {
 

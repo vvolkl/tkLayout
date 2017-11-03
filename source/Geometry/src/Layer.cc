@@ -594,7 +594,7 @@ void Layer::calculateStraightProperties() {
 
       // Calculate phiOverlap of the module -> assumed that all modules have the same properties
       double width      = zPlusModules1.size()>0 ? zPlusModules1[0].meanWidth() : 0.0;
-      double dsDistance = zPlusModules1.size()>0 ? zPlusModules1[0].dsDistance() : 0.0;
+      //double dsDistance = zPlusModules1.size()>0 ? zPlusModules1[0].dsDistance() : 0.0;
       double T          = tan(2.*M_PI / numberRods());
       double A          = 1. / (2. * rInnerMin);
       double B          = 1. / (2. * rOuterMin);

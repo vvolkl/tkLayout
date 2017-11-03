@@ -211,7 +211,7 @@ void Hit::setTrack(const Track* newTrack) {
   m_beta       = (m_A==0) ? 0. : asin(m_A);
   m_rPhiLength = (m_A==0) ? m_rPos : m_track->getRadius(m_zPos)*2*m_beta;
   m_sLength    = m_rPhiLength/sin(m_track->getTheta());
-};
+}
 
 /**
  * Get the track angle theta.
@@ -225,7 +225,7 @@ double Hit::getTrackTheta() {
     return 0;
   }
   return (m_track->getTheta());
-};
+}
 
 /**
  * Getter for the final, angle corrected pair of radiation and interaction lengths.
@@ -264,7 +264,7 @@ double Hit::getRphiResolution(double trackRadius) {
       if (SimParms::getInstance().isMagFieldConst()) C = m_C; // sqrt[1-(r_i / 2R)^2)]
       double B            = A/C;
       double tiltAngle    = m_hitModule->tiltAngle();
-      double skewAngle    = m_hitModule->skewAngle();
+      //double skewAngle    = m_hitModule->skewAngle();
       double resLocalRPhi = m_hitModule->resLocalRPhi();
       double resLocalZ    = m_hitModule->resLocalZ();
 
@@ -322,7 +322,7 @@ double Hit::getZResolution(double trackRadius) {
         double cotgTheta    = m_track->getCotgTheta();
         double D            = cotgTheta/C;
         double tiltAngle    = m_hitModule->tiltAngle();
-        double skewAngle    = m_hitModule->skewAngle();
+        //double skewAngle    = m_hitModule->skewAngle();
         double resLocalRPhi = m_hitModule->resLocalRPhi();
         double resLocalZ    = m_hitModule->resLocalZ();
 

@@ -71,4 +71,4 @@ std::ostream& RootWTextFile::dump(std::ostream& output) {
   }
 
   return output;
-};
+}

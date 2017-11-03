@@ -113,9 +113,13 @@ private:
   const std::string c_fileZMax        = "# Z max: ";              /**< Header prefix - value of max Z*/
   const std::string c_fileZBinWidth   = "# Z bin width: ";        /**< Header prefix - value of bin width in Z*/
   const std::string c_fileZBinNum     = "# Z number of bins: ";   /**< Header prefix - value of the number of bins in Z*/
-  const std::string c_fileEscValue    = "/t";                     /**< File - special character used between values*/
-  const std::string c_fileEscLine     = "/n";                     /**< File - special character used at the end of line*/
-  const std::string c_fileEscComment  = "#//;";                   /**< File - special character used for commet*/
+  const std::string c_fileEscTabMS    = "\t";                     /**< File - special character: tabulator used between values - Microsoft coding*/
+  const std::string c_fileEscTab      = "/t";                     /**< File - special character: tabulator used between values*/
+  const std::string c_fileEscLineMS   = "\n";                     /**< File - special character: newline used at the end of line - Microsoft coding*/
+  const std::string c_fileEscReturnMS = "\r";                     /**< File - special character: carriage return used at the end of line - Microsoft coding*/
+  const std::string c_fileEscLine     = "/n";                     /**< File - special character: newline used at the end of line*/
+  const std::string c_fileEscWhiteSpc = " ";                      /**< File - special character: white space*/
+  const std::string c_fileEscComment  = "#//;";                   /**< File - special character used for comment*/
 
   const double      c_arrowMaxLength  = 0.9;
   const double      c_arrowMinLength  = 0.4;
