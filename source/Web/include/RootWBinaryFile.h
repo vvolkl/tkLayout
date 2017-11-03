@@ -35,8 +35,8 @@ class RootWBinaryFile : public RootWFile {
   //! Default destructor
   ~RootWBinaryFile();
 
-  void setOriginalFile(std::string newFile) {m_originalFileName = newFile ; };
-  void setDontCopyFile(bool noCopy) { m_dontCopyFile = noCopy;}
+  void setOriginalFile(std::string newFile) { m_originalFileName = newFile ; }
+  void setDontCopyFile(bool noCopy) { m_dontCopyFile = noCopy; }
 
   //! Dump method - create copy of original binary file & create a link on the web page to this file
   std::ostream& dump(std::ostream& output);

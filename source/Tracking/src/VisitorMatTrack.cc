@@ -47,7 +47,7 @@ void VisitorMatTrack::visit(const BeamPipe& bp)
   //
   // Add hit corresponding with beam-pipe
   double theta = m_matTrack.getTheta();
-  double eta   = m_matTrack.getEta();
+  //double eta   = m_matTrack.getEta();
   double z0    = m_matTrack.getOrigin().Z();
 
   // Eta assumed to be positive so, theta between 0-90deg, hence material is always given as firstUpper-firstLower hit, secondUpper-secondLower etc. -> sort from lowest to highest Z
@@ -135,7 +135,7 @@ void VisitorMatTrack::visit(const BeamPipe& bp)
   // Form hits
   else {
 
-    for (auto i=0; i<bpZRLower.size(); i++) {
+    for (unsigned int i=0; i<bpZRLower.size(); i++) {
 
       double pathLength  = 0;
       double rPosAvg     = 0;

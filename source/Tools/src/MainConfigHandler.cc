@@ -107,13 +107,13 @@ std::set<string> MainConfigHandler::preprocessConfiguration(istream& is, ostream
 
     if (line.find("//") != string::npos) line = line.erase(line.find("//"));
     string trimmed = trim(line);
-    int includeStart;
+    std::size_t includeStart;
 
     // Merging a spec file (adding the latest includepath to the filename)
     if ((includeStart  = trimmed.find("tiltedLayerSpecFile")) != string::npos) {
       string rightPart = trimmed.substr(includeStart + strlen("tiltedLayerSpecFile"));
       string leftPart  = trimmed.substr(0, includeStart + strlen("tiltedLayerSpecFile"));
-      int lastSpace;
+      unsigned int lastSpace;
       for (lastSpace=0; (rightPart[lastSpace]==' ')&&(lastSpace<rightPart.size()); lastSpace++);
       rightPart = rightPart.substr(lastSpace);
       line = leftPart + " " + absFileNameDirectory + "/" + rightPart;
@@ -121,7 +121,7 @@ std::set<string> MainConfigHandler::preprocessConfiguration(istream& is, ostream
 
     if ((includeStart = trimmed.find("@include")) != string::npos) { //@include @include-std
       trimmed = trimmed.substr(includeStart);
-      int quoteStart, quoteEnd;
+      std::size_t quoteStart, quoteEnd;
       string nextIncludeFileName;
       if ((quoteStart = trimmed.find_first_of("\"")) != string::npos && (quoteEnd = trimmed.find_last_of("\"")) != string::npos) {
         nextIncludeFileName = ctrim(trimmed.substr(quoteStart, quoteEnd - quoteStart + 1), "\"");

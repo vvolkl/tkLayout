@@ -315,7 +315,7 @@ double DetectorModule::stripOccupancyPerEvent() const {
   if (fabs(tiltAngle()) < 1e-3) return stripOccupancyPerEventBarrel();
   else if (fabs(tiltAngle()) - M_PI/2. < 1e-3) return stripOccupancyPerEventEndcap();
   else return stripOccupancyPerEventBarrel()*pow(cos(tiltAngle()),2) + stripOccupancyPerEventEndcap()*pow(sin(tiltAngle()),2);
-};
+}
 
 double DetectorModule::geometricEfficiency() const {
   double inefficiency = fabs(dsDistance() / (zCorrelation()==SAMESEGMENT ? outerSensor().stripLength() : length()) / tan(center().Theta()+tiltAngle())); // fabs prevents the inefficiency from becoming negative when theta+tilt > 90 deg (meaning the geometrically inefficient area is on the other end of the module)
@@ -407,7 +407,7 @@ bool DetectorModule::checkTrackHits(const XYZVector& trackOrig, const XYZVector&
   }
 
   return hitFound;
-};
+}
 
 BarrelModule::BarrelModule(int id, GeometricModule* moduleGeom, const PropertyNode<int>& nodeProperty, const PropertyTree& treeProperty) :
  DetectorModule(id, moduleGeom, nodeProperty, treeProperty)

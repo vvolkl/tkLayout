@@ -145,7 +145,7 @@ bool ExtractorFCCSW::analyze()
 
 
   // Initialize detector id
-  short detId = c_defaultTrackerId;
+  //short detId = c_defaultTrackerId;
 
   auto xmlIncludeDefinitions = m_xmlDoc->NewElement("include");
   xmlIncludeDefinitions->SetAttribute("ref", xmlDefinitionsDocName.c_str());

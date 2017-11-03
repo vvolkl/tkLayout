@@ -99,11 +99,11 @@ private:
 //! Global function converting any template to string with given precision (if template is a number)
 template<typename T> std::string any2str(const T& from, int precision = -1) {
   return StringConverter<std::is_enum<T>::value>::any2str(from, precision);
-};
+}
 
 //! Global function converting any string to template
 template<typename T> T str2any(const std::string& from) {
   return StringConverter<std::is_enum<T>::value>::template str2any<T>(from);
-};
+}
 
 #endif /* INCLUDE_STRINGCONVERTER_H_ */

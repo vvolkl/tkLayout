@@ -757,7 +757,7 @@ void RodPairTilted::buildModules(BarrelModules& modules, const RodTemplate& rodT
   // Build if not empty
   if (!tiltedRings.empty()) {
 
-    int iMod = 0;
+    unsigned int iMod = 0;
     auto iterMod = rodTemplate.begin();
     for (; iMod<tiltedRings.size(); iMod++, ++iterMod) {
 

@@ -172,7 +172,7 @@ namespace material {
 
   MaterialObject::Materials::Materials(MaterialObject::Type newMaterialType) :
     componentsNode_ ("Component", parsedOnly()),
-    materialType_(newMaterialType) {};
+    materialType_(newMaterialType) {}
 
   MaterialObject::Materials::~Materials() {}
 
@@ -220,7 +220,7 @@ namespace material {
     //componentName ("componentName", parsedAndChecked()),
     componentsNode_ ("Component", parsedOnly()),
     elementsNode_ ("Element", parsedOnly()),
-    materialType_(newMaterialType) {};
+    materialType_(newMaterialType) {}
 
   MaterialObject::Component::~Component() { }
 
@@ -317,7 +317,7 @@ namespace material {
     destination ("destination", parsedOnly()),
     targetVolume ("targetVolume", parsedOnly(), 0),
     materialTab_ (MaterialTab::getInstance()),
-    materialType_(newMaterialType) {};
+    materialType_(newMaterialType) {}
 
   MaterialObject::Element::Element(const Element& original, double multiplier) : Element(original.materialType_) {
     if(original.destination.state())

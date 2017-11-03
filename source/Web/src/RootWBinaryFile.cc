@@ -36,7 +36,7 @@ RootWBinaryFile::RootWBinaryFile(std::string newFileName, std::string newDescrip
 //
 // Default destructor
 //
-RootWBinaryFile::~RootWBinaryFile() {};
+RootWBinaryFile::~RootWBinaryFile() {}
 
 //
 // Dump method - create copy of original binary file (if dontCopyFile not specified) & create a link on the web page to this file
@@ -72,5 +72,5 @@ ostream& RootWBinaryFile::dump(ostream& output) {
          << m_fileName << "\">"
          << m_fileName << "</a></tt><br/>";
   return output;
-};
+}
 

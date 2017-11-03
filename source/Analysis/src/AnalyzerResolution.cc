@@ -38,7 +38,7 @@ AnalyzerResolution::AnalyzerResolution(const Detector& detector) : AnalyzerUnit(
  m_etaMin(-1*SimParms::getInstance().getMaxEtaCoverage()),
  m_etaMax(+1*SimParms::getInstance().getMaxEtaCoverage()),
  c_nBins(SimParms::getInstance().getMaxEtaCoverage()/vis_eta_step)  // Default number of bins in histogram from eta=0  to max_eta_coverage)
-{};
+{}
 
 //
 // AnalyzerResolution init method
@@ -104,7 +104,7 @@ bool AnalyzerResolution::analyze()
   myDice.SetSeed(random_seed);
 
   // Initialize
-  double efficiency  = SimParms::getInstance().efficiency();
+  //double efficiency  = SimParms::getInstance().efficiency();
 
   for (int iTrack = 0; iTrack < m_nTracks; iTrack++) {
 
@@ -244,7 +244,7 @@ bool AnalyzerResolution::visualize(RootWSite& webSite)
     std::string tag       = key.first;
     std::string pageTitle = "Resolution";
     std::string additionalSummaryTag;
-    double verticalScale  = 1;
+    //double verticalScale  = 1;
 
     // Correct naming...
     std::string wName = "";
@@ -259,7 +259,7 @@ bool AnalyzerResolution::visualize(RootWSite& webSite)
 
     pageTitle              += " ("+wName+")";
     additionalSummaryTag    = "_"+wName+"_";
-    verticalScale           = 10;
+    //verticalScale           = 10;
     std::string pageAddress = "indexResol" + wName + ".html";
 
     int webPriority         = 0;
@@ -888,7 +888,7 @@ std::vector<double> AnalyzerResolution::averageHisValues(const TProfile& his, st
   std::vector<double> averages;
 
   std::sort(regions.begin(), regions.end());
-  for (int iBorder=0; iBorder<regions.size()-1; ++iBorder) {
+  for (unsigned int iBorder=0; iBorder<regions.size()-1; ++iBorder) {
 
     // Average on points within the cut
     double valuesSum  =0;

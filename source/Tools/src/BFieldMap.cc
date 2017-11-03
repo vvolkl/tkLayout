@@ -83,22 +83,24 @@ void BFieldMap::ingest(std::string fileName) {
     if (line.find(c_fileDataUnit) == 0) {
       line.erase(0,c_fileDataUnit.length());
       m_dataUnit = line;
-      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), c_fileEscLine.c_str() ), m_dataUnit.end());
-      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), '\r'), m_dataUnit.end());
-      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), '\n'), m_dataUnit.end());
-      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), ' ' ), m_dataUnit.end());
-      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), c_fileEscValue.c_str()), m_dataUnit.end());
+      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), *c_fileEscLineMS.c_str()  ), m_dataUnit.end());
+      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), *c_fileEscReturnMS.c_str()), m_dataUnit.end());
+      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), *c_fileEscLine.c_str()    ), m_dataUnit.end());
+      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), *c_fileEscTabMS.c_str()   ), m_dataUnit.end());
+      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), *c_fileEscTab.c_str()     ), m_dataUnit.end());
+      m_dataUnit.erase(std::remove(m_dataUnit.begin(), m_dataUnit.end(), *c_fileEscWhiteSpc.c_str()), m_dataUnit.end());
       continue;
     }
     //find xUnit
     if (line.find(c_fileXUnit) == 0) {
       line.erase(0,c_fileXUnit.length());
       m_xUnit = line;
-      m_xUnit.erase(std::remove(m_xUnit.begin(), m_xUnit.end(), c_fileEscLine.c_str() ), m_xUnit.end());
-      m_xUnit.erase(std::remove(m_xUnit.begin(), m_xUnit.end(), '\r'), m_xUnit.end());
-      m_xUnit.erase(std::remove(m_xUnit.begin(), m_xUnit.end(), '\n'), m_xUnit.end());
-      m_xUnit.erase(std::remove(m_xUnit.begin(), m_xUnit.end(), ' ' ), m_xUnit.end());
-      m_xUnit.erase(std::remove(m_xUnit.begin(), m_xUnit.end(), c_fileEscValue.c_str()), m_xUnit.end());
+      m_xUnit.erase(std::remove(m_xUnit.begin(), m_xUnit.end(), *c_fileEscLineMS.c_str()  ), m_xUnit.end());
+      m_xUnit.erase(std::remove(m_xUnit.begin(), m_xUnit.end(), *c_fileEscReturnMS.c_str()), m_xUnit.end());
+      m_xUnit.erase(std::remove(m_xUnit.begin(), m_xUnit.end(), *c_fileEscLine.c_str()    ), m_xUnit.end());
+      m_xUnit.erase(std::remove(m_xUnit.begin(), m_xUnit.end(), *c_fileEscTabMS.c_str()   ), m_xUnit.end());
+      m_xUnit.erase(std::remove(m_xUnit.begin(), m_xUnit.end(), *c_fileEscTab.c_str()     ), m_xUnit.end());
+      m_xUnit.erase(std::remove(m_xUnit.begin(), m_xUnit.end(), *c_fileEscWhiteSpc.c_str()), m_xUnit.end());
       continue;
     }
     //find xMin
@@ -133,11 +135,12 @@ void BFieldMap::ingest(std::string fileName) {
     if (line.find(c_fileYUnit) == 0) {
       line.erase(0,c_fileYUnit.length());
       m_yUnit = line;
-      m_yUnit.erase(std::remove(m_yUnit.begin(), m_yUnit.end(), c_fileEscLine.c_str() ), m_yUnit.end());
-      m_yUnit.erase(std::remove(m_yUnit.begin(), m_yUnit.end(), '\r'), m_yUnit.end());
-      m_yUnit.erase(std::remove(m_yUnit.begin(), m_yUnit.end(), '\n'), m_yUnit.end());
-      m_yUnit.erase(std::remove(m_yUnit.begin(), m_yUnit.end(), ' ' ), m_yUnit.end());
-      m_yUnit.erase(std::remove(m_yUnit.begin(), m_yUnit.end(), c_fileEscValue.c_str()), m_yUnit.end());
+      m_yUnit.erase(std::remove(m_yUnit.begin(), m_yUnit.end(), *c_fileEscLineMS.c_str()  ), m_yUnit.end());
+      m_yUnit.erase(std::remove(m_yUnit.begin(), m_yUnit.end(), *c_fileEscReturnMS.c_str()), m_yUnit.end());
+      m_yUnit.erase(std::remove(m_yUnit.begin(), m_yUnit.end(), *c_fileEscLine.c_str()    ), m_yUnit.end());
+      m_yUnit.erase(std::remove(m_yUnit.begin(), m_yUnit.end(), *c_fileEscTabMS.c_str()   ), m_yUnit.end());
+      m_yUnit.erase(std::remove(m_yUnit.begin(), m_yUnit.end(), *c_fileEscTab.c_str()     ), m_yUnit.end());
+      m_yUnit.erase(std::remove(m_yUnit.begin(), m_yUnit.end(), *c_fileEscWhiteSpc.c_str()), m_yUnit.end());
       continue;
     }
     //find xMin
@@ -172,11 +175,12 @@ void BFieldMap::ingest(std::string fileName) {
     if (line.find(c_fileZUnit) == 0) {
       line.erase(0,c_fileZUnit.length());
       m_zUnit = line;
-      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), c_fileEscLine.c_str() ), m_zUnit.end());
-      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), '\r'), m_zUnit.end());
-      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), '\n'), m_zUnit.end());
-      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), ' ' ), m_zUnit.end());
-      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), c_fileEscValue.c_str()), m_zUnit.end());
+      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), *c_fileEscLineMS.c_str()  ), m_zUnit.end());
+      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), *c_fileEscReturnMS.c_str()), m_zUnit.end());
+      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), *c_fileEscLine.c_str()    ), m_zUnit.end());
+      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), *c_fileEscTabMS.c_str()   ), m_zUnit.end());
+      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), *c_fileEscTab.c_str()     ), m_zUnit.end());
+      m_zUnit.erase(std::remove(m_zUnit.begin(), m_zUnit.end(), *c_fileEscWhiteSpc.c_str()), m_zUnit.end());
       continue;
     }
     //find m_zMin

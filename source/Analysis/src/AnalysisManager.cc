@@ -230,7 +230,7 @@ bool AnalysisManager::makeWebInfoPage()
 
   RootWInfo& myInfoBField = myContentParms.addInfo("Applied magnetic field [T] averaged along Z");
   double avgMagField = 0;
-  for (auto i=0; i<SimParms::getInstance().getNMagFieldRegions(); i++) avgMagField += SimParms::getInstance().magField[i]*Units::T;
+  for (unsigned int i=0; i<SimParms::getInstance().getNMagFieldRegions(); i++) avgMagField += SimParms::getInstance().magField[i]*Units::T;
   avgMagField /= SimParms::getInstance().getNMagFieldRegions();
   myInfoBField.setValue(avgMagField/Units::T);
 
@@ -266,10 +266,10 @@ bool AnalysisManager::makeWebInfoPage()
   // Csv files - geometry
   if (m_units.find("AnalyzerGeometry")!=m_units.end() && m_units["AnalyzerGeometry"]->isAnalysisOK()) {
 
-    const AnalyzerGeometry* unit = dynamic_cast<const AnalyzerGeometry*>(m_units["AnalyzerGeometry"].get());
+    //const AnalyzerGeometry* unit = dynamic_cast<const AnalyzerGeometry*>(m_units["AnalyzerGeometry"].get());
 
-    std::string fileName    = "";
-    std::string webFileName = "";
+    //std::string fileName    = "";
+    //std::string webFileName = "";
   }
 
   // Csv files - resolution files

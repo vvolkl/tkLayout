@@ -94,7 +94,7 @@ void Disk::check() {
   else if (!numRings.state() && !m_innerRadius.state()) throw PathfulException("At least one between numRings and innerRadius must be specified");
 }
 
-double Disk::getDsDistance(const vector<double>& buildDsDistances, int rindex) const {
+double Disk::getDsDistance(const vector<double>& buildDsDistances, unsigned int rindex) const {
   return rindex-1 >= buildDsDistances.size() ? buildDsDistances.back() : buildDsDistances.at(rindex-1);
 }
 
@@ -122,16 +122,17 @@ void Disk::buildBottomUp(const vector<double>& buildDsDistances) {
   double ringRadius = 0.;
   double ringZOffset= 0.;
 
-  for (int i = 1, parity = -m_bigParity(); lastRho < m_outerRadius(); i++, parity *= -1) {
+  int parity = -m_bigParity();
+  for (unsigned int iRing = 1; lastRho < m_outerRadius(); iRing++, parity *= -1) {
 
-    Ring* ring = GeometryFactory::make<Ring>(i, BOTTOMUP, m_ringNode, propertyTree());
+    Ring* ring = GeometryFactory::make<Ring>(iRing, BOTTOMUP, m_ringNode, propertyTree());
 
-    if (i == 1) ringRadius = m_innerRadius();
+    if (iRing == 1) ringRadius = m_innerRadius();
     else {
 
       // Calcaluate new and last position in Z
-      double newZ  = m_zEndcapCentre + (parity > 0 ? + bigDelta() : - bigDelta()) - ring->smallDelta() - getDsDistance(buildDsDistances, i)/2;
-      double lastZ = m_zEndcapCentre + (parity > 0 ? - bigDelta() : + bigDelta()) + lastSmallDelta     + getDsDistance(buildDsDistances, i)/2;
+      double newZ  = m_zEndcapCentre + (parity > 0 ? + bigDelta() : - bigDelta()) - ring->smallDelta() - getDsDistance(buildDsDistances, iRing)/2;
+      double lastZ = m_zEndcapCentre + (parity > 0 ? - bigDelta() : + bigDelta()) + lastSmallDelta     + getDsDistance(buildDsDistances, iRing)/2;
 
       // Calculate shift in Z position of extreme cases (either innemost or outermost disc)
       // Remember that disc put always in to the centre of endcap
@@ -167,7 +168,7 @@ void Disk::buildBottomUp(const vector<double>& buildDsDistances) {
 
     // Add ring to the disc
     m_rings.push_back(ring);
-    m_ringIndexMap[i] = ring;
+    m_ringIndexMap[iRing] = ring;
 
     // Keep for next calculation
     lastRho        = ring->ringOuterRadius();

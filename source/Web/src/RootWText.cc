@@ -11,7 +11,7 @@
 //
 void RootWText::addText(std::string newText) {
   m_text << newText;
-};
+}
 
 //
 // Dump the text
@@ -20,6 +20,6 @@ std::ostream& RootWText::dump(std::ostream& output) {
 
   output << m_text.str();
   return output;
-};
+}
 
 

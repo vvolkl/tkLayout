@@ -546,22 +546,22 @@ void TiltedRing::buildLeftRight(double lastThetaEnd) {
   //std::cout << "zInner() = " << zInner() << std::endl;
 
 
-  double zH2p = zOuter() - 0.5 * lengthEff * cos(tiltAngle());
-  double rH2p = outerRadius() + 0.5 * lengthEff * sin(tiltAngle());
+  //double zH2p = zOuter() - 0.5 * lengthEff * cos(tiltAngle());
+  //double rH2p = outerRadius() + 0.5 * lengthEff * sin(tiltAngle());
   //double zH2pp = zOuter() + 0.5 * lengthEff * cos(tiltAngle());
   //double rH2pp = outerRadius() - 0.5 * lengthEff * sin(tiltAngle());
 
   double zH2UP = zOuter() + 0.5 * dsDistance * sin(tiltAngle());
   double rH2UP = outerRadius() + 0.5 * dsDistance * cos(tiltAngle());
-  double zH2pUP = zH2UP - 0.5 * lengthEff * cos(tiltAngle());
+  //double zH2pUP = zH2UP - 0.5 * lengthEff * cos(tiltAngle());
   double rH2pUP = rH2UP + 0.5 * lengthEff * sin(tiltAngle());
   //double zH2ppUP = zH2UP + 0.5 * lengthEff * cos(tiltAngle());
   //double rH2ppUP = rH2UP - 0.5 * lengthEff * sin(tiltAngle());
 
   double zH2DOWN = zOuter() - 0.5 * dsDistance * sin(tiltAngle());
   double rH2DOWN = outerRadius() - 0.5 * dsDistance * cos(tiltAngle());
-  double zH2pDOWN = zH2DOWN - 0.5 * lengthEff * cos(tiltAngle());
-  double rH2pDOWN = rH2DOWN + 0.5 * lengthEff * sin(tiltAngle());
+  //double zH2pDOWN = zH2DOWN - 0.5 * lengthEff * cos(tiltAngle());
+  //double rH2pDOWN = rH2DOWN + 0.5 * lengthEff * sin(tiltAngle());
   //double zH2ppDOWN = zH2DOWN + 0.5 * lengthEff * cos(tiltAngle());
   //double rH2ppDOWN = rH2DOWN - 0.5 * lengthEff * sin(tiltAngle());
 
@@ -586,22 +586,22 @@ void TiltedRing::buildLeftRight(double lastThetaEnd) {
   deltaTiltIdealInner(tiltAngle() - tiltAngleIdealInner());
 
 
-  double zH1p = zInner() - 0.5 * lengthEff * cos(tiltAngle());
-  double rH1p = innerRadius() + 0.5 * lengthEff * sin(tiltAngle());
+  //double zH1p = zInner() - 0.5 * lengthEff * cos(tiltAngle());
+  //double rH1p = innerRadius() + 0.5 * lengthEff * sin(tiltAngle());
   //double zH1pp = zInner() + 0.5 * lengthEff * cos(tiltAngle());
   //double rH1pp = innerRadius() - 0.5 * lengthEff * sin(tiltAngle());
 
   double zH1UP = zInner() + 0.5 * dsDistance * sin(tiltAngle());
   double rH1UP = innerRadius() + 0.5 * dsDistance * cos(tiltAngle());
-  double zH1pUP = zH1UP - 0.5 * lengthEff * cos(tiltAngle());
+  //double zH1pUP = zH1UP - 0.5 * lengthEff * cos(tiltAngle());
   double rH1pUP = rH1UP + 0.5 * lengthEff * sin(tiltAngle());
   //double zH1ppUP = zH1UP + 0.5 * lengthEff * cos(tiltAngle());
   //double rH1ppUP = rH1UP - 0.5 * lengthEff * sin(tiltAngle());
 
   double zH1DOWN = zInner() - 0.5 * dsDistance * sin(tiltAngle());
   double rH1DOWN = innerRadius() - 0.5 * dsDistance * cos(tiltAngle());
-  double zH1pDOWN = zH1DOWN - 0.5 * lengthEff * cos(tiltAngle());
-  double rH1pDOWN = rH1DOWN + 0.5 * lengthEff * sin(tiltAngle());
+  //double zH1pDOWN = zH1DOWN - 0.5 * lengthEff * cos(tiltAngle());
+  //double rH1pDOWN = rH1DOWN + 0.5 * lengthEff * sin(tiltAngle());
   //double zH1ppDOWN = zH1DOWN + 0.5 * lengthEff * cos(tiltAngle());
   //double rH1ppDOWN = rH1DOWN - 0.5 * lengthEff * sin(tiltAngle());
 

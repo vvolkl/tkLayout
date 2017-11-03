@@ -312,9 +312,9 @@ class BarrelModule : public DetectorModule, public Clonable<BarrelModule> {
   int16_t ring()       const { return (int16_t)myid(); }
   int16_t moduleRing() const { return ring(); }
 
-  PosRef   posRef()   const { return (PosRef){ cntId(), (side() > 0 ? ring() : -ring()), layer(), rod() }; }
-  TableRef tableRef() const { return (TableRef){ cntName(), layer(), ring() }; }
-  UniRef   uniRef()   const { return  UniRef{ cntName(), layer(), ring(), rod(), side() }; }
+  PosRef   posRef()   const { return PosRef{ cntId(), (side() > 0 ? ring() : -ring()), layer(), rod() }; }
+  TableRef tableRef() const { return TableRef{ cntName(), layer(), ring() }; }
+  UniRef   uniRef()   const { return UniRef{ cntName(), layer(), ring(), rod(), side() }; }
 }; // Class
 
 /*
@@ -349,8 +349,8 @@ class EndcapModule : public DetectorModule, public Clonable<EndcapModule> {
   int16_t blade()      const { return (int16_t)myid(); } // CUIDADO Think of a better name!
   int16_t side()       const { return (int16_t)signum(center().Z()); }
 
-  PosRef posRef()     const { return (PosRef){ cntId(), (side() > 0 ? disk() : -disk()), ring(), blade() }; }
-  TableRef tableRef() const { return (TableRef){ cntName(), disk(), ring() }; }
+  PosRef posRef()     const { return PosRef{ cntId(), (side() > 0 ? disk() : -disk()), ring(), blade() }; }
+  TableRef tableRef() const { return TableRef{ cntName(), disk(), ring() }; }
   UniRef uniRef()     const { return UniRef{ cntName(), disk(), ring(), blade(), side() }; }
 }; // Class
 

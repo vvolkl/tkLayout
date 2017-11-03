@@ -38,7 +38,7 @@ AnalyzerPatternReco::AnalyzerPatternReco(const Detector& detector) : AnalyzerUni
  c_nBins(SimParms::getInstance().getMaxEtaCoverage()/vis_eta_step * 2)  // Default number of bins in histogram from eta=0  to max_eta_coverage)
 {
   m_chargedMap = nullptr;
-};
+}
 
 //
 // AnalyzerPatternReco destructor
@@ -197,7 +197,7 @@ bool AnalyzerPatternReco::analyze()
             if (testTriplet && !isTripletFromDifLayers(track, iHit, propagOutIn)) continue;
             else testTriplet = false;
 
-            int nHitsUsed = iHit+1; // (C counting from zero)
+            //int nHitsUsed = iHit+1; // (C counting from zero)
 
             // Keep first/last N hits (based on approach) and find paramaters of the next hit
             double nextRPos    = 0;
@@ -275,7 +275,7 @@ bool AnalyzerPatternReco::analyze()
 
               // Create profile histograms if don't exist yet
               if (m_hisPtHitDProjInOut.find(iHitIDMap)==m_hisPtHitDProjInOut.end()) {
-                for (int iMom=0; iMom<MainConfigHandler::getInstance().getMomenta().size(); iMom++) {
+                for (unsigned int iMom=0; iMom<MainConfigHandler::getInstance().getMomenta().size(); iMom++) {
 
                   std::string name = "hisPt_" + any2str(iMom) + "_Hit_" + iHitID + "_DProjInOut";
                   m_hisPtHitDProjInOut[iHitIDMap].push_back(new TProfile(name.c_str(),name.c_str(),c_nBins, 0, SimParms::getInstance().getMaxEtaCoverage()));
@@ -296,7 +296,7 @@ bool AnalyzerPatternReco::analyze()
 
               // Create profile histograms if don't exist yet
               if (m_hisPHitDProjInOut.find(iHitIDMap)==m_hisPHitDProjInOut.end()) {
-                for (int iMom=0; iMom<MainConfigHandler::getInstance().getMomenta().size(); iMom++) {
+                for (unsigned int iMom=0; iMom<MainConfigHandler::getInstance().getMomenta().size(); iMom++) {
 
                   std::string name = "hisP_" + any2str(iMom) + "_Hit_" + iHitID + "_DProjInOut";
                   m_hisPHitDProjInOut[iHitIDMap].push_back(new TProfile(name.c_str(),name.c_str(),c_nBins, 0, SimParms::getInstance().getMaxEtaCoverage()));
@@ -318,7 +318,7 @@ bool AnalyzerPatternReco::analyze()
 
               // Create profile histograms if don't exist yet
               if (m_hisPtHitDProjOutIn.find(iHitIDMap)==m_hisPtHitDProjOutIn.end()) {
-                for (int iMom=0; iMom<MainConfigHandler::getInstance().getMomenta().size(); iMom++) {
+                for (unsigned int iMom=0; iMom<MainConfigHandler::getInstance().getMomenta().size(); iMom++) {
 
                   std::string name = "hisPt_" + any2str(iMom) + "_Hit_" + iHitID + "_DProjOutIn";
                   m_hisPtHitDProjOutIn[iHitIDMap].push_back(new TProfile(name.c_str(),name.c_str(),c_nBins, 0, SimParms::getInstance().getMaxEtaCoverage()));
@@ -339,7 +339,7 @@ bool AnalyzerPatternReco::analyze()
 
               // Create profile histograms if don't exist yet
               if (m_hisPHitDProjOutIn.find(iHitIDMap)==m_hisPHitDProjOutIn.end()) {
-                for (int iMom=0; iMom<MainConfigHandler::getInstance().getMomenta().size(); iMom++) {
+                for (unsigned int iMom=0; iMom<MainConfigHandler::getInstance().getMomenta().size(); iMom++) {
 
                   std::string name = "hisP_" + any2str(iMom) + "_Hit_" + iHitID + "_DProjOutIn";
                   m_hisPHitDProjOutIn[iHitIDMap].push_back(new TProfile(name.c_str(),name.c_str(),c_nBins, 0, SimParms::getInstance().getMaxEtaCoverage()));
@@ -435,12 +435,13 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
   canvasPtBkgContInOut.SetObjectStat(false);
 
   // For each momentum/transverse momentum compute
-  int iMomentum = 0;
   gStyle->SetTitleW(0.9);
   TLegend* legendPtInOut = new TLegend(0.11,0.66,0.36,0.89,"p_{T} options (InOut+IP, full TRK):");
   legendPtInOut->SetTextSize(0.025);
 
-  for (const auto& pIter : MainConfigHandler::getInstance().getMomenta()) {
+  for (unsigned int iMomentum=0; iMomentum<MainConfigHandler::getInstance().getMomenta().size(); iMomentum++) {
+
+    auto pTValue = MainConfigHandler::getInstance().getMomenta()[iMomentum];
 
     m_hisPtBkgContInOut[iMomentum]->SetNameTitle(std::string("hisPtBkgContInOut"+any2str(iMomentum)).c_str(),"In-Out: Bkg contamination prob. in 95% area of 2D error ellipse accumulated accross N layers;#eta;1 - #Pi_{i=1}^{N} (1-p^{i}_{bkg_95%})");
     m_hisPtBkgContInOut[iMomentum]->SetLineWidth(2.);
@@ -453,9 +454,7 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
     else              m_hisPtBkgContInOut[iMomentum]->Draw("SAME PE1");
 
     m_hisPtBkgContInOut[iMomentum]->GetYaxis()->SetRangeUser(0,1.3);
-    legendPtInOut->AddEntry(m_hisPtBkgContInOut[iMomentum],std::string(any2str(pIter/Units::GeV)+"GeV").c_str(),"lp");
-
-    iMomentum++;
+    legendPtInOut->AddEntry(m_hisPtBkgContInOut[iMomentum],std::string(any2str(pTValue/Units::GeV)+"GeV").c_str(),"lp");
   }
   legendPtInOut->Draw("SAME");
 
@@ -471,12 +470,11 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
   canvasPtBkgContInnerInOut.SetObjectStat(false);
 
   // For each momentum/transverse momentum compute
-  iMomentum = 0;
   gStyle->SetTitleW(0.9);
   legendPtInOut->SetEntryLabel("p_{T} options (InOut+IP, inner TRK):");
   legendPtInOut->SetTextSize(0.025);
 
-  for (const auto& pIter : MainConfigHandler::getInstance().getMomenta()) {
+  for (unsigned int iMomentum=0; iMomentum<MainConfigHandler::getInstance().getMomenta().size(); iMomentum++) {
 
     m_hisPtBkgContInnerInOut[iMomentum]->SetNameTitle(std::string("hisPtBkgContInnerInOut"+any2str(iMomentum)).c_str(),"In-Out: Bkg contamination prob. in 95% area of 2D error ellipse accumulated accross N inner trk layers;#eta;1 - #Pi_{i=1}^{N} (1-p^{i}_{bkg_95%})");
     m_hisPtBkgContInnerInOut[iMomentum]->SetLineWidth(2.);
@@ -489,8 +487,6 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
     else              m_hisPtBkgContInnerInOut[iMomentum]->Draw("SAME PE1");
 
     m_hisPtBkgContInnerInOut[iMomentum]->GetYaxis()->SetRangeUser(0,1.3);
-
-    iMomentum++;
   }
   legendPtInOut->Draw("SAME");
 
@@ -506,12 +502,13 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
   canvasPtBkgContOutIn.SetObjectStat(false);
 
   // For each momentum/transverse momentum compute
-  iMomentum = 0;
   gStyle->SetTitleW(0.9);
   TLegend* legendPtOutIn = new TLegend(0.11,0.66,0.31,0.89,"p_{T} options (OutIn, full TRK):");
   legendPtOutIn->SetTextSize(0.025);
 
-  for (const auto& pIter : MainConfigHandler::getInstance().getMomenta()) {
+  for (unsigned int iMomentum=0; iMomentum<MainConfigHandler::getInstance().getMomenta().size(); iMomentum++) {
+
+    auto pTValue = MainConfigHandler::getInstance().getMomenta()[iMomentum];
 
     m_hisPtBkgContOutIn[iMomentum]->SetNameTitle(std::string("hisPtBkgContOutIn"+any2str(iMomentum)).c_str(),"Out-In: Bkg contamination prob. in 95% area of 2D error ellipse accumulated accross N layers;#eta;1 - #Pi_{i=1}^{N} (1-p^{i}_{bkg_95%})");
     m_hisPtBkgContOutIn[iMomentum]->SetLineWidth(2.);
@@ -524,9 +521,7 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
     else              m_hisPtBkgContOutIn[iMomentum]->Draw("SAME PE1");
 
     m_hisPtBkgContOutIn[iMomentum]->GetYaxis()->SetRangeUser(0,1.3);
-    legendPtOutIn->AddEntry(m_hisPtBkgContOutIn[iMomentum],std::string(any2str(pIter/Units::GeV)+"GeV").c_str(),"lp");
-
-    iMomentum++;
+    legendPtOutIn->AddEntry(m_hisPtBkgContOutIn[iMomentum],std::string(any2str(pTValue/Units::GeV)+"GeV").c_str(),"lp");
   }
   legendPtOutIn->Draw("SAME");
 
@@ -545,15 +540,13 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
     std::string name = iterMap.first;
     name = name.erase(0,2);
 
-    int         iMomentum = 0;
-
     TCanvas canvasPtD0InOut(std::string("canvasPtD0InOut"+name).c_str(),"",vis_std_canvas_sizeY,vis_min_canvas_sizeY);
     canvasPtD0InOut.SetGrid(1,1);
     canvasPtD0InOut.SetLogy(0);
     canvasPtD0InOut.SetFillColor(Palette::color_plot_background);
     canvasPtD0InOut.SetObjectStat(false);
 
-    for (const auto& pIter : MainConfigHandler::getInstance().getMomenta()) {
+    for (unsigned int iMomentum=0; iMomentum<MainConfigHandler::getInstance().getMomenta().size(); iMomentum++) {
 
       auto & profHis = iterMap.second;
       profHis[iMomentum]->SetNameTitle(std::string("canvasPtD0InOut"+name+any2str(iMomentum)).c_str(),std::string(name+" In-Out approach: an extrapolated #sigma_{R-#Phi} from previous layers/discs;#eta; #sigma_{R-#Phi} [#mum]").c_str());
@@ -567,8 +560,6 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
       else              profHis[iMomentum]->Draw("SAME PE1");
 
       profHis[iMomentum]->GetYaxis()->SetRangeUser(0,1000);
-
-      iMomentum++;
     }
     legendPtInOut->SetX1(0.64);
     legendPtInOut->SetX2(0.89);
@@ -588,15 +579,13 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
     std::string name = iterMap.first;
     name = name.erase(0,2);
 
-    int         iMomentum = 0;
-
     TCanvas canvasPtZ0InOut(std::string("canvasPtZ0InOut"+name).c_str(),"",vis_std_canvas_sizeY,vis_min_canvas_sizeY);
     canvasPtZ0InOut.SetGrid(1,1);
     canvasPtZ0InOut.SetLogy(0);
     canvasPtZ0InOut.SetFillColor(Palette::color_plot_background);
     canvasPtZ0InOut.SetObjectStat(false);
 
-    for (const auto& pIter : MainConfigHandler::getInstance().getMomenta()) {
+    for (unsigned int iMomentum=0; iMomentum<MainConfigHandler::getInstance().getMomenta().size(); iMomentum++) {
 
       auto & profHis = iterMap.second;
       profHis[iMomentum]->SetNameTitle(std::string("canvasPtZ0InOut"+name+any2str(iMomentum)).c_str(),std::string(name+" In-Out approach: an extrapolated #sigma_{Z} from previous layers/discs;#eta; #sigma_{Z} [#mum]").c_str());
@@ -610,8 +599,6 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
       else              profHis[iMomentum]->Draw("SAME PE1");
 
       profHis[iMomentum]->GetYaxis()->SetRangeUser(0,1000);
-
-      iMomentum++;
     }
     legendPtInOut->Draw("SAME");
 
@@ -628,15 +615,13 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
     std::string name = iterMap.first;
     name = name.erase(0,2);
 
-    int         iMomentum = 0;
-
     TCanvas canvasPtProbContamInOut(std::string("canvasPtProbContamInOut"+name).c_str(),"",vis_std_canvas_sizeY,vis_min_canvas_sizeY);
     canvasPtProbContamInOut.SetGrid(1,1);
     canvasPtProbContamInOut.SetLogy(0);
     canvasPtProbContamInOut.SetFillColor(Palette::color_plot_background);
     canvasPtProbContamInOut.SetObjectStat(false);
 
-    for (const auto& pIter : MainConfigHandler::getInstance().getMomenta()) {
+    for (unsigned int iMomentum=0; iMomentum<MainConfigHandler::getInstance().getMomenta().size(); iMomentum++) {
 
       auto & profHis = iterMap.second;
       profHis[iMomentum]->SetNameTitle(std::string("canvasPtProbContamInOut"+name+any2str(iMomentum)).c_str(),std::string(name+" In-Out approach: bkg contamination prob. as error ellipse extrap. from previous layers/discs;#eta; probability").c_str());
@@ -650,8 +635,6 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
       else              profHis[iMomentum]->Draw("SAME PE1");
 
       profHis[iMomentum]->GetYaxis()->SetRangeUser(0,0.1);
-
-      iMomentum++;
     }
     legendPtInOut->SetX1(0.11);
     legendPtInOut->SetX2(0.36);
@@ -673,15 +656,13 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
     std::string name = iterMap.first;
     name = name.erase(0,2);
 
-    int         iMomentum = 0;
-
     TCanvas canvasPtD0OutIn(std::string("canvasPtD0OutIn"+name).c_str(),"",vis_std_canvas_sizeY,vis_min_canvas_sizeY);
     canvasPtD0OutIn.SetGrid(1,1);
     canvasPtD0OutIn.SetLogy(0);
     canvasPtD0OutIn.SetFillColor(Palette::color_plot_background);
     canvasPtD0OutIn.SetObjectStat(false);
 
-    for (const auto& pIter : MainConfigHandler::getInstance().getMomenta()) {
+    for (unsigned int iMomentum=0; iMomentum<MainConfigHandler::getInstance().getMomenta().size(); iMomentum++) {
 
       auto & profHis = iterMap.second;
       profHis[iMomentum]->SetNameTitle(std::string("canvasPtD0OutIn"+name+any2str(iMomentum)).c_str(),std::string(name+" In-Out approach: an extrapolated #sigma_{R-#Phi} from previous layers/discs;#eta; #sigma_{R-#Phi} [#mum]").c_str());
@@ -695,8 +676,6 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
       else              profHis[iMomentum]->Draw("SAME PE1");
 
       profHis[iMomentum]->GetYaxis()->SetRangeUser(0,1000);
-
-      iMomentum++;
     }
     legendPtOutIn->SetX1(0.64);
     legendPtOutIn->SetX2(0.89);
@@ -716,15 +695,13 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
     std::string name = iterMap.first;
     name = name.erase(0,2);
 
-    int         iMomentum = 0;
-
     TCanvas canvasPtZ0OutIn(std::string("canvasPtZ0OutIn"+name).c_str(),"",vis_std_canvas_sizeY,vis_min_canvas_sizeY);
     canvasPtZ0OutIn.SetGrid(1,1);
     canvasPtZ0OutIn.SetLogy(0);
     canvasPtZ0OutIn.SetFillColor(Palette::color_plot_background);
     canvasPtZ0OutIn.SetObjectStat(false);
 
-    for (const auto& pIter : MainConfigHandler::getInstance().getMomenta()) {
+    for (unsigned int iMomentum=0; iMomentum<MainConfigHandler::getInstance().getMomenta().size(); iMomentum++) {
 
       auto & profHis = iterMap.second;
       profHis[iMomentum]->SetNameTitle(std::string("canvasPtZ0OutIn"+name+any2str(iMomentum)).c_str(),std::string(name+" In-Out approach: an extrapolated #sigma_{Z} from previous layers/discs;#eta; #sigma_{Z} [#mum]").c_str());
@@ -738,8 +715,6 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
       else              profHis[iMomentum]->Draw("SAME PE1");
 
       profHis[iMomentum]->GetYaxis()->SetRangeUser(0,1000);
-
-      iMomentum++;
     }
     legendPtOutIn->Draw("SAME");
 
@@ -756,15 +731,13 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
     std::string name = iterMap.first;
     name = name.erase(0,2);
 
-    int         iMomentum = 0;
-
     TCanvas canvasPtProbContamOutIn(std::string("canvasPtProbContamOutIn"+name).c_str(),"",vis_std_canvas_sizeY,vis_min_canvas_sizeY);
     canvasPtProbContamOutIn.SetGrid(1,1);
     canvasPtProbContamOutIn.SetLogy(0);
     canvasPtProbContamOutIn.SetFillColor(Palette::color_plot_background);
     canvasPtProbContamOutIn.SetObjectStat(false);
 
-    for (const auto& pIter : MainConfigHandler::getInstance().getMomenta()) {
+    for (unsigned int iMomentum=0; iMomentum<MainConfigHandler::getInstance().getMomenta().size(); iMomentum++) {
 
       auto & profHis = iterMap.second;
       profHis[iMomentum]->SetNameTitle(std::string("canvasPtProbContamOutIn"+name+any2str(iMomentum)).c_str(),std::string(name+" In-Out approach: bkg contamination prob. as error ellipse extrap. from previous layers/discs;#eta; probability").c_str());
@@ -778,8 +751,6 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
       else              profHis[iMomentum]->Draw("SAME PE1");
 
       profHis[iMomentum]->GetYaxis()->SetRangeUser(0,0.1);
-
-      iMomentum++;
     }
     legendPtOutIn->SetX1(0.11);
     legendPtOutIn->SetX2(0.36);
@@ -806,12 +777,13 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
   canvasPBkgContInOut.SetObjectStat(false);
 
   // For each momentum/transverse momentum compute
-  iMomentum = 0;
   gStyle->SetTitleW(0.9);
   TLegend* legendPInOut = new TLegend(0.11,0.66,0.36,0.89,"p options (InOut+IP, full TRK):");
   legendPInOut->SetTextSize(0.025);
 
-  for (const auto& pIter : MainConfigHandler::getInstance().getMomenta()) {
+  for (unsigned int iMomentum=0; iMomentum<MainConfigHandler::getInstance().getMomenta().size(); iMomentum++) {
+
+    auto pTValue = MainConfigHandler::getInstance().getMomenta()[iMomentum];
 
     m_hisPBkgContInOut[iMomentum]->SetNameTitle(std::string("hisPBkgContInOut"+any2str(iMomentum)).c_str(),"In-Out: Bkg contamination prob. in 95% area of 2D error ellipse accumulated accross N layers;#eta;1 - #Pi_{i=1}^{N} (1-p^{i}_{bkg_95%})");
     m_hisPBkgContInOut[iMomentum]->SetLineWidth(2.);
@@ -824,9 +796,7 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
     else              m_hisPBkgContInOut[iMomentum]->Draw("SAME PE1");
 
     m_hisPBkgContInOut[iMomentum]->GetYaxis()->SetRangeUser(0,1.3);
-    legendPInOut->AddEntry(m_hisPBkgContInOut[iMomentum],std::string(any2str(pIter/Units::GeV)+"GeV").c_str(),"lp");
-
-    iMomentum++;
+    legendPInOut->AddEntry(m_hisPBkgContInOut[iMomentum],std::string(any2str(pTValue/Units::GeV)+"GeV").c_str(),"lp");
   }
   legendPInOut->Draw("SAME");
 
@@ -842,12 +812,11 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
   canvasPBkgContInnerInOut.SetObjectStat(false);
 
   // For each momentum/transverse momentum compute
-  iMomentum = 0;
   gStyle->SetTitleW(0.9);
   legendPInOut->SetEntryLabel("p options (InOut+IP, inner TRK):");
   legendPInOut->SetTextSize(0.025);
 
-  for (const auto& pIter : MainConfigHandler::getInstance().getMomenta()) {
+  for (unsigned int iMomentum=0; iMomentum<MainConfigHandler::getInstance().getMomenta().size(); iMomentum++) {
 
     m_hisPBkgContInnerInOut[iMomentum]->SetNameTitle(std::string("hisPBkgContInnerInOut"+any2str(iMomentum)).c_str(),"In-Out: Bkg contamination prob. in 95% area of 2D error ellipse accumulated accross N inner trk layers;#eta;1 - #Pi_{i=1}^{N} (1-p^{i}_{bkg_95%})");
     m_hisPBkgContInnerInOut[iMomentum]->SetLineWidth(2.);
@@ -860,8 +829,6 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
     else              m_hisPBkgContInnerInOut[iMomentum]->Draw("SAME PE1");
 
     m_hisPBkgContInnerInOut[iMomentum]->GetYaxis()->SetRangeUser(0,1.3);
-
-    iMomentum++;
   }
   legendPInOut->Draw("SAME");
 
@@ -877,12 +844,13 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
   canvasPBkgContOutIn.SetObjectStat(false);
 
   // For each momentum/transverse momentum compute
-  iMomentum = 0;
   gStyle->SetTitleW(0.9);
   TLegend* legendPOutIn = new TLegend(0.11,0.66,0.31,0.89,"p options (OutIn, full TRK):");
   legendPInOut->SetTextSize(0.025);
 
-  for (const auto& pIter : MainConfigHandler::getInstance().getMomenta()) {
+  for (unsigned int iMomentum=0; iMomentum<MainConfigHandler::getInstance().getMomenta().size(); iMomentum++) {
+
+    auto pTValue = MainConfigHandler::getInstance().getMomenta()[iMomentum];
 
     m_hisPBkgContOutIn[iMomentum]->SetNameTitle(std::string("hisPBkgContOutIn"+any2str(iMomentum)).c_str(),"In-Out: Bkg contamination prob. in 95% area of 2D error ellipse accumulated accross N layers;#eta;1 - #Pi_{i=1}^{N} (1-p^{i}_{bkg_95%})");
     m_hisPBkgContOutIn[iMomentum]->SetLineWidth(2.);
@@ -895,9 +863,7 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
     else              m_hisPBkgContOutIn[iMomentum]->Draw("SAME PE1");
 
     m_hisPBkgContOutIn[iMomentum]->GetYaxis()->SetRangeUser(0,1.3);
-    legendPOutIn->AddEntry(m_hisPBkgContOutIn[iMomentum],std::string(any2str(pIter/Units::GeV)+"GeV").c_str(),"lp");
-
-    iMomentum++;
+    legendPOutIn->AddEntry(m_hisPBkgContOutIn[iMomentum],std::string(any2str(pTValue/Units::GeV)+"GeV").c_str(),"lp");
   }
   legendPOutIn->Draw("SAME");
 
@@ -916,15 +882,13 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
     std::string name = iterMap.first;
     name = name.erase(0,2);
 
-    int         iMomentum = 0;
-
     TCanvas canvasPD0InOut(std::string("canvasPD0InOut"+name).c_str(),"",vis_std_canvas_sizeY,vis_min_canvas_sizeY);
     canvasPD0InOut.SetGrid(1,1);
     canvasPD0InOut.SetLogy(0);
     canvasPD0InOut.SetFillColor(Palette::color_plot_background);
     canvasPD0InOut.SetObjectStat(false);
 
-    for (const auto& pIter : MainConfigHandler::getInstance().getMomenta()) {
+    for (unsigned int iMomentum=0; iMomentum<MainConfigHandler::getInstance().getMomenta().size(); iMomentum++) {
 
       auto & profHis = iterMap.second;
       profHis[iMomentum]->SetNameTitle(std::string("canvasPD0InOut"+name+any2str(iMomentum)).c_str(),std::string(name+" In-Out approach: an extrapolated #sigma_{R-#Phi} from previous layers/discs;#eta; #sigma_{R-#Phi} [#mum]").c_str());
@@ -938,8 +902,6 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
       else              profHis[iMomentum]->Draw("SAME PE1");
 
       profHis[iMomentum]->GetYaxis()->SetRangeUser(0,1000);
-
-      iMomentum++;
     }
     legendPInOut->SetX1(0.64);
     legendPInOut->SetX2(0.89);
@@ -959,15 +921,13 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
     std::string name = iterMap.first;
     name = name.erase(0,2);
 
-    int         iMomentum = 0;
-
     TCanvas canvasPZ0InOut(std::string("canvasPZ0InOut"+name).c_str(),"",vis_std_canvas_sizeY,vis_min_canvas_sizeY);
     canvasPZ0InOut.SetGrid(1,1);
     canvasPZ0InOut.SetLogy(0);
     canvasPZ0InOut.SetFillColor(Palette::color_plot_background);
     canvasPZ0InOut.SetObjectStat(false);
 
-    for (const auto& pIter : MainConfigHandler::getInstance().getMomenta()) {
+    for (unsigned int iMomentum=0; iMomentum<MainConfigHandler::getInstance().getMomenta().size(); iMomentum++) {
 
       auto & profHis = iterMap.second;
       profHis[iMomentum]->SetNameTitle(std::string("canvasPZ0InOut"+name+any2str(iMomentum)).c_str(),std::string(name+" In-Out approach: an extrapolated #sigma_{Z} from previous layers/discs;#eta; #sigma_{Z} [#mum]").c_str());
@@ -981,8 +941,6 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
       else              profHis[iMomentum]->Draw("SAME PE1");
 
       profHis[iMomentum]->GetYaxis()->SetRangeUser(0,1000);
-
-      iMomentum++;
     }
     legendPInOut->SetX1(0.64);
     legendPInOut->SetX2(0.89);
@@ -1001,15 +959,13 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
     std::string name = iterMap.first;
     name = name.erase(0,2);
 
-    int         iMomentum = 0;
-
     TCanvas canvasPProbContamInOut(std::string("canvasPProbContamInOut"+name).c_str(),"",vis_std_canvas_sizeY,vis_min_canvas_sizeY);
     canvasPProbContamInOut.SetGrid(1,1);
     canvasPProbContamInOut.SetLogy(0);
     canvasPProbContamInOut.SetFillColor(Palette::color_plot_background);
     canvasPProbContamInOut.SetObjectStat(false);
 
-    for (const auto& pIter : MainConfigHandler::getInstance().getMomenta()) {
+    for (unsigned int iMomentum=0; iMomentum<MainConfigHandler::getInstance().getMomenta().size(); iMomentum++) {
 
       auto & profHis = iterMap.second;
       profHis[iMomentum]->SetNameTitle(std::string("canvasPProbContamInOut"+name+any2str(iMomentum)).c_str(),std::string(name+" In-Out approach: bkg contamination prob. as error ellipse extrap. from previous layers/discs;#eta; probability").c_str());
@@ -1023,8 +979,6 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
       else              profHis[iMomentum]->Draw("SAME PE1");
 
       profHis[iMomentum]->GetYaxis()->SetRangeUser(0,1.1);
-
-      iMomentum++;
     }
     legendPInOut->SetX1(0.11);
     legendPInOut->SetX2(0.36);
@@ -1045,15 +999,13 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
     std::string name = iterMap.first;
     name = name.erase(0,2);
 
-    int         iMomentum = 0;
-
     TCanvas canvasPD0OutIn(std::string("canvasPD0OutIn"+name).c_str(),"",vis_std_canvas_sizeY,vis_min_canvas_sizeY);
     canvasPD0OutIn.SetGrid(1,1);
     canvasPD0OutIn.SetLogy(0);
     canvasPD0OutIn.SetFillColor(Palette::color_plot_background);
     canvasPD0OutIn.SetObjectStat(false);
 
-    for (const auto& pIter : MainConfigHandler::getInstance().getMomenta()) {
+    for (unsigned int iMomentum=0; iMomentum<MainConfigHandler::getInstance().getMomenta().size(); iMomentum++) {
 
       auto & profHis = iterMap.second;
       profHis[iMomentum]->SetNameTitle(std::string("canvasPD0OutIn"+name+any2str(iMomentum)).c_str(),std::string(name+" In-Out approach: an extrapolated #sigma_{R-#Phi} from previous layers/discs;#eta; #sigma_{R-#Phi} [#mum]").c_str());
@@ -1067,8 +1019,6 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
       else              profHis[iMomentum]->Draw("SAME PE1");
 
       profHis[iMomentum]->GetYaxis()->SetRangeUser(0,1000);
-
-      iMomentum++;
     }
     legendPOutIn->SetX1(0.64);
     legendPOutIn->SetX2(0.89);
@@ -1088,15 +1038,13 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
     std::string name = iterMap.first;
     name = name.erase(0,2);
 
-    int         iMomentum = 0;
-
     TCanvas canvasPZ0OutIn(std::string("canvasPZ0OutIn"+name).c_str(),"",vis_std_canvas_sizeY,vis_min_canvas_sizeY);
     canvasPZ0OutIn.SetGrid(1,1);
     canvasPZ0OutIn.SetLogy(0);
     canvasPZ0OutIn.SetFillColor(Palette::color_plot_background);
     canvasPZ0OutIn.SetObjectStat(false);
 
-    for (const auto& pIter : MainConfigHandler::getInstance().getMomenta()) {
+    for (unsigned int iMomentum=0; iMomentum<MainConfigHandler::getInstance().getMomenta().size(); iMomentum++) {
 
       auto & profHis = iterMap.second;
       profHis[iMomentum]->SetNameTitle(std::string("canvasPZ0OutIn"+name+any2str(iMomentum)).c_str(),std::string(name+" In-Out approach: an extrapolated #sigma_{Z} from previous layers/discs;#eta; #sigma_{Z} [#mum]").c_str());
@@ -1110,8 +1058,6 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
       else              profHis[iMomentum]->Draw("SAME PE1");
 
       profHis[iMomentum]->GetYaxis()->SetRangeUser(0,1000);
-
-      iMomentum++;
     }
     legendPOutIn->SetX1(0.64);
     legendPOutIn->SetX2(0.89);
@@ -1130,15 +1076,13 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
     std::string name = iterMap.first;
     name = name.erase(0,2);
 
-    int         iMomentum = 0;
-
     TCanvas canvasPProbContamOutIn(std::string("canvasPProbContamOutIn"+name).c_str(),"",vis_std_canvas_sizeY,vis_min_canvas_sizeY);
     canvasPProbContamOutIn.SetGrid(1,1);
     canvasPProbContamOutIn.SetLogy(0);
     canvasPProbContamOutIn.SetFillColor(Palette::color_plot_background);
     canvasPProbContamOutIn.SetObjectStat(false);
 
-    for (const auto& pIter : MainConfigHandler::getInstance().getMomenta()) {
+    for (unsigned int iMomentum=0; iMomentum<MainConfigHandler::getInstance().getMomenta().size(); iMomentum++) {
 
       auto & profHis = iterMap.second;
       profHis[iMomentum]->SetNameTitle(std::string("canvasPProbContamOutIn"+name+any2str(iMomentum)).c_str(),std::string(name+" In-Out approach: bkg contamination prob. as error ellipse extrap. from previous layers/discs;#eta; probability").c_str());
@@ -1152,8 +1096,6 @@ bool AnalyzerPatternReco::visualize(RootWSite& webSite)
       else              profHis[iMomentum]->Draw("SAME PE1");
 
       profHis[iMomentum]->GetYaxis()->SetRangeUser(0,1.1);
-
-      iMomentum++;
     }
     legendPOutIn->SetX1(0.11);
     legendPOutIn->SetX2(0.36);

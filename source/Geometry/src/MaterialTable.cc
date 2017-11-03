@@ -85,7 +85,7 @@
       std::stringstream ss2(str);
       ss2 >> fraction;
 
-      materialFractions_.push_back((MaterialFraction){mat, fraction});
+      materialFractions_.push_back(MaterialFraction{mat, fraction});
     }
 
   }

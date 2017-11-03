@@ -392,7 +392,7 @@
             rindex = modinrings.size(); // CUIDADO Tentative fix, rindex is max of ring index found in modules
 
             // ring loop
-            for (int j = 0; j < /*maxRing*/ rindex; j++) { // CUIDADO rindex WTF!?!?!?
+            for (int j = 0; j < /*maxRing*/ int(rindex); j++) { // CUIDADO rindex WTF!?!?!?
               if (!modinrings.at(j).empty()) {
                 double A, B, C, D;
                 double density, surface, length;
@@ -417,7 +417,7 @@
                       double zThis = barrelcaps.at(i).at(modinrings.at(j).front()).getModule().minZ();
                       double zNext = barrelcaps.at(i).at(modinrings.at(j+1).front()).getModule().center().Z();
                       length = (zThis - zMin) + (zNext - zThis)/2.;
-                    } else if (j < modinrings.size()-1 &&
+                    } else if (j < int(modinrings.size())-1 &&
                         (barrelcaps.at(i).at(modinrings.at(j).front()).getModule().side() == // CUIDADO we check if we switch sides (due to asym barrel), 
                          barrelcaps.at(i).at(modinrings.at(j+1).front()).getModule().side())) { // jumping to the farthest z- mod (nasty bug in orig code)
                       double zPrev = barrelcaps.at(i).at(modinrings.at(j-1).front()).getModule().center().Z();
@@ -465,7 +465,7 @@
 #ifdef TILTED_HOTFIX
                         // hot fix to scale the services materials for the non contiguous modules in the tilted barrel
                         // if (barrelcaps.at(i).at(modinrings.at(j).front()).getModule().tiltAngle() != 0.) {
-                          if (j < modinrings.size()-1 && // we never accumulate material for the first module, so we don't need to take care of the case like in the firt block of hotfix
+                          if (j < int(modinrings.size())-1 && // we never accumulate material for the first module, so we don't need to take care of the case like in the firt block of hotfix
                               (barrelcaps.at(i).at(modinrings.at(j).front()).getModule().side() == // CUIDADO we check if we switch sides (due to asym barrel), 
                                barrelcaps.at(i).at(modinrings.at(j+1).front()).getModule().side())) { // jumping to the farthest z- mod (nasty bug in orig code)
                             double zPrev = barrelcaps.at(i).at(modinrings.at(j-1).front()).getModule().center().Z();
