@@ -61,6 +61,23 @@ void printResolutionScale(double resolution1,
   }
 }
 
+// Convert resolution from tkLayout to delphes
+double extractResolution(double baseResolution, std::string parameter) {
+
+        if( parameter == "pT" || parameter == "p"){
+          return baseResolution/100.;  // p and pT resolution to be as a fraction
+        }
+        else if( parameter == "phi0"){
+          return baseResolution * M_PI/180.0; // phi in degrees, want radians
+        }
+        else if(parameter == "z0" || parameter == "d0"){
+          return baseResolution/1000.0; // d0 and z0 in um, want mm 
+        }
+        else{
+          return baseResolution;
+        }
+}
+
 void printResolutionStandardWorsen(double myResolution, double myPt) {
   (*osp) << Form("(%f*pt/%f)", myResolution, myPt);
 }
@@ -94,6 +111,16 @@ int main(int argc, char* argv[]) {
   double      etaSlice = 0.0;
   std::string author   = "";
   std::string parameter= "";
+
+  // 
+  // Define parameters
+  std::map<std::string, std::string> parameterMap; 
+  parameterMap["z0"]     = "dz0";
+  parameterMap["d0"]     = "dd0";
+  parameterMap["pT"]     = "dpt/pt";
+  parameterMap["p"]      = "dp/p";
+  parameterMap["cotgTh"] = "dcotgTH";
+  parameterMap["phi0"]   = "dphi";
 
   //
   // Program options
@@ -139,7 +166,7 @@ int main(int argc, char* argv[]) {
       // Delphes output file
       outFile = new std::ofstream();
       layoutName = varMap["layout-name"].as<std::string>();
-      std::string delphesName  = layoutName+"_"+parameter+"Res_Delphes.conf";
+      std::string delphesName  = layoutName+"_"+parameter+"Res_Delphes.tcl";
       outFile->open(delphesName);
       if (outFile->is_open()) {
         osp = outFile;
@@ -156,6 +183,9 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
+  ///////////////////////////////////
+  // Fill map with [pt -> TProfile]
+  ///////////////////////////////////
   std::map<double, TProfile*> ptProfiles;
 
   // Read pt profiles > browse;
@@ -166,11 +196,14 @@ int main(int argc, char* argv[]) {
     TObject* myObject = key->ReadObj();
     if (myObject) {
 
-      // Canvas
+      // Check the object is a TCanvas
       std::string aClass=myObject->ClassName();
       if (aClass=="TCanvas") {
 
+        // Cast to TCanvas
         TCanvas* aCanvas = (TCanvas*) myObject;
+
+        // Get list of TProfiles in canvas
         TList* aList=aCanvas->GetListOfPrimitives();
         for (int i=0; i<aList->GetSize(); ++i) {
 
@@ -181,11 +214,11 @@ int main(int argc, char* argv[]) {
             TProfile* myProfile = (TProfile*)aList->At(i);
             std::cout << "TProfile: " << myProfile->GetName() << std::endl;
             double aMomentum;
-            if (sscanf(myProfile->GetName(), std::string(parameter+"_vs_eta%lf").c_str(), &aMomentum)==1) {
+            if (sscanf(myProfile->GetName(), std::string(parameter+"_vs_eta%lf").c_str(), &aMomentum)==1) { 
               //std::cerr << "Momentum [GeV]: " << aMomentum << std::endl;
               ptProfiles[aMomentum]=(TProfile*) myProfile->Clone();
             }
-            else if (sscanf(myProfile->GetName(), std::string("Total_"+parameter+"_vs_eta%lf").c_str(), &aMomentum)==1) {
+            else if (sscanf(myProfile->GetName(), std::string("Total_"+parameter+"_vs_eta%lf").c_str(), &aMomentum)==1) { 
               //std::cerr << "Momentum [GeV]: " << aMomentum << std::endl;
               ptProfiles[aMomentum]=(TProfile*) myProfile->Clone();
 
@@ -194,7 +227,7 @@ int main(int argc, char* argv[]) {
         }
       }
     }
-  }
+  } // end filling ptProfiles map 
   //inputFile->Close();
 
   // Check that non-zero profile map
@@ -208,8 +241,10 @@ int main(int argc, char* argv[]) {
     // First profile -> get eta, rescale bins, ...
     TProfile* exampleProfile = itPtProfiles->second;
 
-    VDUMP(exampleProfile->GetXaxis()->GetXmax());
-    VDUMP(exampleProfile->GetXaxis()->GetXmin());
+    double maxEta = exampleProfile->GetXaxis()->GetXmax();
+    VDUMP(maxEta);
+    double minEta = exampleProfile->GetXaxis()->GetXmin();
+    VDUMP(minEta);
     double originalEtaStep = exampleProfile->GetXaxis()->GetBinWidth(1);
     VDUMP(originalEtaStep);
     int rebinScale = etaSlice / originalEtaStep;
@@ -226,7 +261,7 @@ int main(int argc, char* argv[]) {
     double myResolution, nextResolution;
     double myPt, nextPt;
     (*osp) << "#" << std::endl;
-    (*osp) << "# Automatically generated tracker resolution formula for layout: " << layoutName << std::endl;
+    (*osp) << "# Automatically generated tracker resolution formula " << parameterMap[parameter] << " for layout: " << layoutName << std::endl;
     (*osp) << "#" << std::endl;
     (*osp) << "#  By " << author << " on: " << currentDateTime() << std::endl;
     (*osp) << "#" << std::endl;
@@ -248,7 +283,12 @@ int main(int argc, char* argv[]) {
 
         TProfile* myProfile = it->second;
         myPt         = it->first;
-        myResolution = myProfile->GetBinContent(iBin)/100.;
+
+        // extract resolution  
+        myResolution = extractResolution(myProfile->GetBinContent(iBin), parameter);
+
+
+        //myResolution = myProfile->GetBinContent(iBin)/100.; // WJF -- FRACTIONAL FOR MOMENTUM ONLY
         printEtaRange(lowEta, highEta);
         if (it==ptProfiles.begin()) {
           // From here down the resolution will be always the same
@@ -266,7 +306,9 @@ int main(int argc, char* argv[]) {
         else {
           TProfile* nextProfile = nextItem->second;
           nextPt = nextItem->first;
-          nextResolution = nextProfile->GetBinContent(iBin)/100.;
+          
+          // Extract next resolution
+          nextResolution = extractResolution(nextProfile->GetBinContent(iBin), parameter);
           printPtRange(myPt, nextPt);
           printResolutionScale(myResolution, myPt, nextResolution, nextPt);
           printNewLine(false);
