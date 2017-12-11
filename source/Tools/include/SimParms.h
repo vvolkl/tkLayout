@@ -113,6 +113,7 @@ class SimParms : public PropertyObject, public Buildable, public Visitable {
   ReadonlyProperty<bool  , Default>   useLumiRegInAnalysis; //!< Apply luminous region constraints, when analysing geometry (resolution, pattern reco, etc.)
   ReadonlyProperty<bool  , NoDefault> useIPConstraint;      //!< Use IP constraint in track fitting
   ReadonlyProperty<bool  , Default>   useParabolicApprox;   //!< Use parabolic approximation in tracking & track propagation (for consistency reasons)
+  ReadonlyProperty<bool  , Default>   use3DBeamPipe;        //!< Define a beam-pipe by 2 contours inner & outer (phi-symmetric) to model 3D shape of beam-pipe or use only a simple 2D shape, defined by 1 countour (phi symmetric)
   ReadonlyProperty<int   , NoDefault> ptCost;
   ReadonlyProperty<int   , NoDefault> stripCost;
   ReadonlyProperty<double, NoDefault> efficiency;

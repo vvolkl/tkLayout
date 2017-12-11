@@ -254,7 +254,7 @@ protected:
   //! Sort internally all hits assigned to this track -> sorting algorithm based on hit radius - by smaller radius sooner or vice-versa (inner-to-outer approach or vice-versa)
   void sortHits(bool bySmallerR);
 
-  //! Remove hits, which would be at radius higher than f*curling_radius (hits assumed to be found in line approach, which is perfectly valid if the geometry has a cylindrical
+  //! Remove hits, which would be at radius higher than curling_radius (hits assumed to be found in line approach, which is perfectly valid if the geometry has a cylindrical
   //! symmetry, but then all hits above curling radius must be removed -> check that hits are below curling radius). Factor f stands for a cut_off factor to avoid passage of
   //! modules at very shallow angle, i.e. hit radius close to the curling_radius: defined by max sin(phi-phi0), where phi is set as follows: arc_length = R*2*phi
   bool isHitRPosLowerThanCurlingRadius(double rPos, double zPos) { return rPos<track_maxSinPhi*2*getRadius(zPos); }

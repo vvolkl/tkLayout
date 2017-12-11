@@ -26,6 +26,7 @@ SimParms::SimParms() :
  useLumiRegInGeomBuild(   "useLumiRegInGeomBuild"   , parsedOnly(), 1),
  useLumiRegInAnalysis(    "useLumiRegInAnalysis"    , parsedOnly(), 0),
  useParabolicApprox(      "useParabolicApprox"      , parsedOnly(), 0),
+ use3DBeamPipe(           "use3DBeamPipe"           , parsedOnly(), 0),
  ptCost(                  "ptCost"                  , parsedAndChecked()),
  stripCost(               "stripCost"               , parsedAndChecked()),
  efficiency(              "efficiency"              , parsedAndChecked()),
@@ -75,8 +76,6 @@ SimParms::SimParms() :
     irradiationMapFiles.appendString(path);
     m_irradiationMapsManager->addIrradiationMap(path.c_str());
   }
-  
- 
 }
 
 //
