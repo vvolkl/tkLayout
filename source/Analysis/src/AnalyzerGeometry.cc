@@ -670,8 +670,8 @@ void AnalyzerGeometry::drawBeamPipeRZ(TCanvas& canvas, double maxZ, bool bothPls
       float iSign = (i>=0) ? +1 : -1;
       int   iAbs  = abs(i);
 
-      double bpRadiusLower = m_beamPipe->radiusLower[iAbs];
-      double bpRadiusUpper = m_beamPipe->radiusUpper[iAbs];
+      double bpRadiusLower = m_beamPipe->getRadiusLower(iAbs);
+      double bpRadiusUpper = m_beamPipe->getRadiusUpper(iAbs);
       double bpZPos        = iSign*m_beamPipe->zPos[iAbs];
 
       // Linearize if beam-pipe defined in Z beyond the drawing +-Z window
@@ -685,8 +685,8 @@ void AnalyzerGeometry::drawBeamPipeRZ(TCanvas& canvas, double maxZ, bool bothPls
 
           bpZPos   = iSign*maxZ*vis_safety_factor;
 
-          bpRadiusLower = (fabs(bpZPos)-m_beamPipe->zPos[iAbs-1])*m_beamPipe->getTiltLower(iAbs-1) + m_beamPipe->radiusLower[iAbs-1];
-          bpRadiusUpper = (fabs(bpZPos)-m_beamPipe->zPos[iAbs-1])*m_beamPipe->getTiltUpper(iAbs-1) + m_beamPipe->radiusUpper[iAbs-1];
+          bpRadiusLower = (fabs(bpZPos)-m_beamPipe->zPos[iAbs-1])*m_beamPipe->getTiltLower(iAbs-1) + m_beamPipe->getRadiusLower(iAbs-1);
+          bpRadiusUpper = (fabs(bpZPos)-m_beamPipe->zPos[iAbs-1])*m_beamPipe->getTiltUpper(iAbs-1) + m_beamPipe->getRadiusUpper(iAbs-1);
         }
       }
 
@@ -728,8 +728,8 @@ void AnalyzerGeometry::drawBeamPipeXY(TCanvas& canvas)
     // Get radii & sort them from highest to lowest (not to overdraw their shape in the end)
     for (auto i=0; i<=m_beamPipe->getNSegments(); i++) {
 
-      double bpRadiusLower = m_beamPipe->radiusLower[i];
-      double bpRadiusUpper = m_beamPipe->radiusUpper[i];
+      double bpRadiusLower = m_beamPipe->getRadiusLower(i);
+      double bpRadiusUpper = m_beamPipe->getRadiusUpper(i);
       double bpZPos        = m_beamPipe->zPos[i];
       bpRZ.insert(std::pair<double,double>(bpRadiusLower,bpZPos));
       bpRZ.insert(std::pair<double,double>(bpRadiusUpper,bpZPos));

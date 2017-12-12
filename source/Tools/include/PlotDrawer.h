@@ -224,8 +224,8 @@ struct RZ : public std::pair<int, int>, private Rounder {
 //! Get module RZ (R=>0, Z full) coordinates rounded with micron precision
 struct RZFull : public RZ {
   const bool valid;
-  RZFull(const DetectorModule& m) : RZ(m), valid(true) {}
-  RZFull(const XYZVector& v) : RZ(v), valid(true) {}
+  RZFull(const DetectorModule& m) : RZ(m), valid(true) {} //(m.center().Z() >= 0)
+  RZFull(const XYZVector& v)      : RZ(v), valid(true) {} //(v.Z() >= 0) {}
 };
 
 //! Based on module coordinate type <XY>, <RZ>, <RZFull> get module parameters: x,y ; r,z(>=0) ; r,z -> module expressed as PolyLine
