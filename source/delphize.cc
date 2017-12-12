@@ -241,10 +241,8 @@ int main(int argc, char* argv[]) {
     // First profile -> get eta, rescale bins, ...
     TProfile* exampleProfile = itPtProfiles->second;
 
-    double maxEta = exampleProfile->GetXaxis()->GetXmax();
-    VDUMP(maxEta);
-    double minEta = exampleProfile->GetXaxis()->GetXmin();
-    VDUMP(minEta);
+    VDUMP(exampleProfile->GetXaxis()->GetXmax());
+    VDUMP(exampleProfile->GetXaxis()->GetXmin());
     double originalEtaStep = exampleProfile->GetXaxis()->GetBinWidth(1);
     VDUMP(originalEtaStep);
     int rebinScale = etaSlice / originalEtaStep;
