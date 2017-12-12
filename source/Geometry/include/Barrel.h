@@ -64,6 +64,7 @@ class Barrel : public PropertyObject, public Buildable, public Identifiable<stri
   //! GeometryVisitor pattern -> barrel visitable (const. option)
   void accept(ConstGeometryVisitor& v) const;
 
+  Property<std::string   , Default  >  exportTag;   //!< Tag used in geometry export to merge tracker barrels/end-caps with the same tag together (unless "", i.e. no tag, defined)
   Property<        int   , NoDefault>  numLayers;   //!< Number of layers in a barrel
   ReadonlyProperty<double, Computable> minZ;        //!< Minimum Z position of a barrel
   ReadonlyProperty<double, Computable> maxZ;        //!< Maximum Z position of a barrel
