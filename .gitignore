@@ -6,3 +6,4 @@ run
 .project
 .cproject
 .settings
+/results/
