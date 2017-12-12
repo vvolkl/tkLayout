@@ -9,6 +9,7 @@
 // Constructor - parse geometry config file using boost property tree & read-in Layer, Support nodes
 //
 Barrel::Barrel(const std::string& name, const PropertyTree& nodeProperty, const PropertyTree& treeProperty) :
+ exportTag(           "exportTag"         , parsedOnly(), std::string("")),
  numLayers(           "numLayers"         , parsedAndChecked()),
  minZ(         string("minZ")             ),
  maxZ(         string("maxZ")             ),

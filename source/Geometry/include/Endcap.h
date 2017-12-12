@@ -50,6 +50,7 @@ class Endcap : public PropertyObject, public Buildable, public Identifiable<std:
   //! GeometryVisitor pattern -> endcap visitable (const. option)
   void accept(ConstGeometryVisitor& v) const;
 
+  Property<std::string   , Default  >  exportTag;    //!< Tag used in geometry export to merge tracker barrels/end-caps with the same tag together (unless "", i.e. no tag, defined)
   Property<        int   , NoDefault>  numDisks;     //!< Total number of discs to be built between innerZ and outerZ positions
   Property<        double, NoDefault>  innerZ;       //!< Start building disks at innerZ
   Property<        double, NoDefault>  outerZ;       //!< End building disks at outerZ

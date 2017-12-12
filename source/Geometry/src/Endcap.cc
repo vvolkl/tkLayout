@@ -6,6 +6,7 @@
 // Constructor - parse geometry config file using boost property tree & read-in Disk, Support nodes
 //
 Endcap::Endcap(double barrelOuterZ, const std::string& name, const PropertyTree& nodeProperty, const PropertyTree& treeProperty) :
+ exportTag(    "exportTag"   , parsedOnly(), std::string("")),
  numDisks(     "numDisks"    , parsedAndChecked()),
  innerZ(       "innerZ"      , parsedOnly()),
  outerZ(       "outerZ"      , parsedAndChecked()),

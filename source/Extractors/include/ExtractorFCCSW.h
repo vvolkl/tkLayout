@@ -59,9 +59,9 @@ class ExtractorFCCSW : public AnalyzerUnit {
   //! Helper method printing out number with unit & given precision
   std::string printWithUnit(double value, int precision, std::string unit);
 
-  std::unique_ptr<tinyxml2::XMLDocument> m_xmlDoc;      //!< An XML base container (pointing to XML file with top level dd4hep tags such as readout ... created on disc)
-  std::unique_ptr<tinyxml2::XMLDocument> m_xmlDefinitionsDoc;      //!< An XML base container (pointing to XML file with detector definitions and dimensions created on disc)
-  tinyxml2::XMLNode*                     m_xmlNodeRoot; //!< XML root node
+  std::unique_ptr<tinyxml2::XMLDocument> m_xmlDoc;             //!< An XML base container (pointing to XML file with top level dd4hep tags such as readout ... created on disc)
+  std::unique_ptr<tinyxml2::XMLDocument> m_xmlDefinitionsDoc;  //!< An XML base container (pointing to XML file with detector definitions and dimensions created on disc)
+  tinyxml2::XMLNode*                     m_xmlNodeRoot;        //!< XML root node
 
   const char* c_defaultBrlGeoCreator = "TkLayoutBrlTracker";
   const char* c_defaultEcapGeoCreator= "TkLayoutEcapTracker";
@@ -69,6 +69,12 @@ class ExtractorFCCSW : public AnalyzerUnit {
   const char* c_defaultBrlReadout    = "TrackerBarrelReadout";
   const char* c_defaultEcapReadout   = "TrackerEndcapReadout";
 
+  //! FCCSW restricts Tracker ids up-to a maximum of 5 & defines their names: Inner BRL/ECAP, Outer BRL/ECAP, Fwd ECAP
+  const std::map<std::string, std::string> c_trkName2FCCSWID = { std::make_pair("InnerBRL" , "BarTrackerInner_id"   ),
+                                                                 std::make_pair("InnerECAP", "EndCapTrackerInner_id"),
+                                                                 std::make_pair("OuterBRL" , "BarTrackerOuter_id"   ),
+                                                                 std::make_pair("OuterECAP", "EndCapTrackerOuter_id"),
+                                                                 std::make_pair("FwdECAP"  , "FwdTracker_id"        ) };
   const double c_readoutGridX  = 0.005;
   const double c_readoutGridZ  = 0.010;
   const int c_defaultTrackerId = 10;

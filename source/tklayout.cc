@@ -221,6 +221,7 @@ int main(int argc, char* argv[]) {
     if (progOptions.count("extraction") && expOption=="FCC") {
 
       startTaskClock("Extracting geometry for use in FCCSW");
+      std::cout << std::endl;
       aManager.initUnit(matTracks, "ExtractorFCCSW");
       isAnalysisOK      = aManager.analyzeUnit("ExtractorFCCSW");
       stopTaskClock();
