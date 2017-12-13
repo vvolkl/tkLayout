@@ -566,11 +566,6 @@ bool ExtractorFCCSW::analyze()
           xmlEcapDim->SetAttribute("rmax", printWithUnit(exportedTrkRMax[ecapTag], c_precision, "mm").c_str());
           xmlEcapDim->SetAttribute("zmin", printWithUnit(exportedTrkZMin[ecapTag], c_precision, "mm").c_str());
           xmlEcapDim->SetAttribute("zmax", printWithUnit(exportedTrkZMax[ecapTag], c_precision, "mm").c_str());
-          //if ("pos" == posnegString) {
-          xmlEcapDim->SetAttribute("reflect", "false");
-          //} else {
-          //  xmlEcapDim->SetAttribute("reflect", "true");
-          //}
           exportedTrk[ecapTag]->InsertEndChild(xmlEcapDim);
 
           // Add sensitive type
