@@ -19,6 +19,8 @@ PROJECT(tklayout)
 OPTION(INSTALL_DOC "Set to ON to build/install Documentation" OFF )
 
 
+SET(CXX_STANDARD 17)
+
 # Output directories
 SET( EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}/bin" CACHE PATH
     "EXECUTABLE_OUTPUT_PATH" FORCE )
@@ -43,7 +45,7 @@ link_libraries(${ROOT_LIBRARIES})
 # Compiler flags
 #SET ( CMAKE_CXX_COMPILER "g++" )
 ADD_DEFINITIONS( "-Wl,--copy-dt-needed-entries" )
-SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -g -pedantic -Wall -Wno-reorder")
+SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17  -g -pedantic -Wall -Wno-reorder")
 
 INCLUDE_DIRECTORIES( ${PROJECT_SOURCE_DIR}/source/Geometry/include 
                      ${PROJECT_SOURCE_DIR}/source/Analysis/include
@@ -109,8 +111,8 @@ ADD_CUSTOM_TARGET(revisiontag ALL)
 
 # creates svnversion.h using cmake script
 ADD_CUSTOM_COMMAND(TARGET revisiontag COMMAND ${CMAKE_COMMAND}
-   -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} 
-   -P ${CMAKE_CURRENT_SOURCE_DIR}/GetGitVersion.cmake)
+   -DSOURCE_DIR=${CMAKE_SOURCE_DIR} 
+   -P ${CMAKE_SOURCE_DIR}/GetGitVersion.cmake)
 
 #--------------------------------------------------------
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)            # Set automatically rpath for dynamic linking of external libraries
@@ -138,6 +140,10 @@ INSTALL(TARGETS delphize  RUNTIME DESTINATION bin)
 INSTALL(TARGETS tinyXML   ARCHIVE DESTINATION lib
                           LIBRARY DESTINATION lib
                           RUNTIME DESTINATION bin)
+INSTALL(DIRECTORY style DESTINATION share/tkLayout)
+INSTALL(DIRECTORY xml DESTINATION share/tkLayout)
+INSTALL(DIRECTORY geometries DESTINATION share/tkLayout)
+INSTALL(DIRECTORY config DESTINATION share/tkLayout)
 
 IF(CMAKE_HOST_UNIX)
     
@@ -145,19 +151,13 @@ IF(CMAKE_HOST_UNIX)
     INSTALL( CODE "MESSAGE(STATUS \"Setting GitRevision.cc to default\" )
                    EXECUTE_PROCESS(COMMAND bash -c \"if [ -e GitRevision.orig.cc ]; then rm -f ${PROJECT_SOURCE_DIR}/source/Tools/src/GitRevision.cc; mv GitRevision.orig.cc ${PROJECT_SOURCE_DIR}/source/Tools/src/GitRevision.cc; fi\")" )
     
-    # Intall symlink
-    INSTALL( CODE "MESSAGE(STATUS \"Creating symlink $ENV{HOME}/bin/tklayout to ${PROJECT_SOURCE_DIR}/bin/tklayout... \" )
-                   EXECUTE_PROCESS(COMMAND \"${CMAKE_COMMAND}\" -E create_symlink ${PROJECT_SOURCE_DIR}/bin/tklayout $ENV{HOME}/bin/tklayout)" )
-
-    INSTALL( CODE "MESSAGE(STATUS \"Creating symlink $ENV{HOME}/bin/delphize to ${PROJECT_SOURCE_DIR}/bin/delphize... \" )
-                   EXECUTE_PROCESS(COMMAND \"${CMAKE_COMMAND}\" -E create_symlink ${PROJECT_SOURCE_DIR}/bin/delphize $ENV{HOME}/bin/delphize)" )
 
     # Configure tkLayout
-    INSTALL( CODE "MESSAGE(STATUS \"Configuring tkLayout software...\" )
-                   MESSAGE(STATUS \" Target directories setup:\" )
-                   EXECUTE_PROCESS(COMMAND bash -c \"if [ -e ${PROJECT_SOURCE_DIR}/bin/setup.bin ]; then ${PROJECT_SOURCE_DIR}/bin/setup.bin --dirNames; fi\")" ) 
-    INSTALL( CODE "MESSAGE(STATUS \" Installation status:\" )
-                   EXECUTE_PROCESS(COMMAND bash -c \"if ! ${PROJECT_SOURCE_DIR}/bin/setup.bin --checkDir; then echo \\\"Problem during installation\\\"; else echo \\\"Installation successful\\\"; fi\")" )
+    #INSTALL( CODE "MESSAGE(STATUS \"Configuring tkLayout software...\" )
+    #               MESSAGE(STATUS \" Target directories setup:\" )
+    #		   EXECUTE_PROCESS(COMMAND bash -c \"if [ -e ${PROJECT_BINARY_DIR}/bin/setup.bin ]; then ${PROJECT_BINARY_DIR}/bin/setup.bin --dirNames; fi\")" ) 
+    #INSTALL( CODE "MESSAGE(STATUS \" Installation status:\" )
+    #               EXECUTE_PROCESS(COMMAND bash -c \"if ! ${PROJECT_SOURCE_DIR}/bin/setup.bin --checkDir; then echo \\\"Problem during installation\\\"; else echo \\\"Installation successful\\\"; fi\")" )
 
 ENDIF()
 
@@ -187,7 +187,7 @@ ELSE()
     ENDIF()
 ENDIF()
 
- Install documentation
+# Install documentation
     # make sure doxygen is executed (make doc) before make install
     INSTALL( CODE "EXEC_PROGRAM(${CMAKE_BUILD_TOOL} ${PROJECT_BINARY_DIR} ARGS doc)" )
     # install documentation
