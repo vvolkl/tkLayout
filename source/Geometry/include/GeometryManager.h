@@ -9,11 +9,16 @@
 #define INCLUDE_GEOMETRYMANAGER_H_
 
 #include <boost/property_tree/ptree_fwd.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
 #include <memory>
 #include <set>
 #include <string>
 #include <vector>
+#include <iostream>
 
+namespace pt = boost::property_tree;
 // Forward declarations
 class Detector;
 
@@ -67,6 +72,16 @@ class GeometryManager {
   //! Get list of all configuration files obtained from the base geometry file using @include command
   //! @return set of all include files (strings)
   std::set<std::string> getListOfConfFiles() const {return m_includeSet;}
+
+  void writeTree() {
+     pt::write_xml("testgeotree.xml", *m_geomTree, std::locale(),
+          pt::xml_writer_make_settings<std::string>(' ', 4));
+
+    //std::stringstream ss;
+    //boost::property_tree::json_parser::write_json(ss, *m_geomTree);
+    //std::cout << ss.str() << std::endl;
+
+  };
 
  private:
 

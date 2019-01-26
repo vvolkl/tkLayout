@@ -21,6 +21,7 @@
 #include "tinyxml2.h"
 #include "Tracker.h"
 #include "Units.h"
+#include <iostream>
 
 // Used namespaces
 using namespace tinyxml2;
@@ -85,6 +86,27 @@ bool ExtractorFCCSW::init(int nGeomTracks)
 // @return True if OK
 bool ExtractorFCCSW::analyze()
 {
+
+  for (const auto& iTrk : m_trackers) {
+
+    // Barrels
+    for (const auto& iBrl : iTrk->barrels()) {
+            std::cout << "iBrl.myid(): " << iBrl.myid() << std::endl;
+          for (const auto& iLayer : iBrl.layers()) {
+              std::cout << "iLayer.myid(): " << iLayer.myid() << std::endl;
+              std::cout << "iLayer.numrods: " << iLayer.flatRods().size() << std::endl;
+            for (const auto& iRod : boost::join(iLayer.flatRods(), iLayer.tiltedRods())) {
+              std::cout << "iRod.myid(): " << iRod.myid() << "\t nummod: " << iRod.numModulesSide(0)
+              << "\t" << iRod.numModulesSide(1) << std::endl;
+                for (const auto& iMod : iRod.modules().first) {
+                  std::cout << "iMod " << iMod.myid()  << std::endl;
+                }
+            }
+          }
+      }
+  }
+  
+  /*
   // Save XML file
   std::string xmlDocBaseName = SimParms::getInstance().getWebDir();
   std::string xmlDocName = SimParms::getInstance().getLayoutName()  + ".xml";
@@ -292,11 +314,12 @@ bool ExtractorFCCSW::analyze()
 
     // Barrels
     for (const auto& iBrl : iTrk->barrels()) {
+            std::cout << "iBrl.myid(): " << iBrl.myid() << std::endl;
 
       auto brlTag = iBrl.exportTag();
 
       // Export this barrel?
-      if (c_trkName2FCCSWID.find(brlTag)!=c_trkName2FCCSWID.end()) {
+      if (true){ //c_trkName2FCCSWID.find(brlTag)!=c_trkName2FCCSWID.end()) {
 
         auto brlTagIDName = c_trkName2FCCSWID.find(brlTag)->second;
 
@@ -335,6 +358,9 @@ bool ExtractorFCCSW::analyze()
 
         // Add individual layers
         for (const auto& iLayer : iBrl.layers()) {
+            std::cout << "iLayer.myid(): " << iLayer.myid() << std::endl;
+            std::cout << "iLayer.numrods: " << iLayer.flatRods().size() << "\t"<<
+            iLayer.tiltedRods().size() << std::endl;
 
           // Add detailed info about individual layer
           auto xmlBrlIthLayer = m_xmlDefinitionsDoc->NewElement("layer");
@@ -351,6 +377,7 @@ bool ExtractorFCCSW::analyze()
 
           // Add detailed info about straight rods
           for (const auto& iRod : boost::join(iLayer.flatRods(), iLayer.tiltedRods())) {
+            std::cout << "iRod.myid(): " << iRod.myid() << std::endl;
 
             // Odd rods
             if (iRod.myid()==1) {
@@ -714,6 +741,7 @@ bool ExtractorFCCSW::analyze()
 
   } // Trackers
 
+  std::cout << xmlDocBaseName + "/" + xmlDocName << std::endl;
   auto eResult = m_xmlDoc->SaveFile((xmlDocBaseName + "/" + xmlDocName).c_str());
   auto eResultDefinitions = m_xmlDefinitionsDoc->SaveFile((xmlDocBaseName + "/" + xmlDefinitionsDocName).c_str());
 
@@ -729,6 +757,8 @@ bool ExtractorFCCSW::analyze()
   }
 
   return m_isAnalysisOK;
+  */
+  return true;
 }
 
 //

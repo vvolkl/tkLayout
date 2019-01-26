@@ -127,6 +127,8 @@ int main(int argc, char* argv[]) {
   GeometryManager gManager(geomFile);
   bool activeDetOK  = gManager.buildActiveDetector();
   bool passiveDetOK = gManager.buildPassiveDetector();
+  gManager.writeTree();
+  return 0;
 
   //
   // Set simulation generic parameters
