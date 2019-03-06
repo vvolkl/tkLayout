@@ -3,7 +3,7 @@
  * @brief
  */
 
-#include <MaterialBudget.h>
+#include <MaterialBudget.hh>
 namespace insur {
   /**
    * The constructor registers a tracker and a collection of inactive surfaces with the material budget before 
@@ -78,7 +78,7 @@ namespace insur {
      */
     void MaterialBudget::print() {
         std::cout << std::endl << "----------Material Budget Internal State----------" << std::endl;
-        int a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0, o = 0, x = 0, s = 0, t = 0;
+        int a = 0, b = 0, d = 0, f = 0, g = 0, h = 0, o = 0, x = 0, s = 0, t = 0;
         for (unsigned int i = 0; i < inactive->getSupports().size(); i++) {
             if (inactive->getSupportPart(i).getCategory() == MaterialProperties::b_sup) a++;
             else if (inactive->getSupportPart(i).getCategory() == MaterialProperties::e_sup) b++;
@@ -335,4 +335,20 @@ namespace insur {
         else throw std::out_of_range("Layer index is out of range: " + layer);
         return index;
     }
+
+  std::vector<InactiveElement> MaterialBudget::getAllServices() {
+    std::vector<InactiveElement> allServices;
+    auto& barrelServices = getInactiveSurfaces().getBarrelServices();
+    auto& endcapServices = getInactiveSurfaces().getEndcapServices();
+    auto& supports = getInactiveSurfaces().getSupports();
+
+    // We put all services inside the same container
+    allServices.reserve( barrelServices.size() + endcapServices.size() + supports.size() ); // preallocate memory
+    allServices.insert( allServices.end(), barrelServices.begin(), barrelServices.end() );
+    allServices.insert( allServices.end(), endcapServices.begin(), endcapServices.end() );
+    allServices.insert( allServices.end(), supports.begin(), supports.end() );
+
+    return allServices;
+  }
+
 }

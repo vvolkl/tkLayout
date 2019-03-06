@@ -3,7 +3,7 @@
  * @brief This is the implementation of the internal data structure for material properties.
  */
 
-#include <MaterialTable.h>
+#include <MaterialTable.hh>
 namespace insur {
     
   void MaterialTable2::parseMaterial(std::string str) {
@@ -94,7 +94,7 @@ namespace insur {
 
   double ElementaryMaterial::getRadiationLength() {
     if (rlength_ <= 0) {
-      rlength_ = 716.4*a_/(z_*(z_+1)+log(287/sqrt(z_)));
+      rlength_ = 716.4*a_/(z_*(z_+1)*log(287/sqrt(z_)));
     }
     return rlength_;
   }

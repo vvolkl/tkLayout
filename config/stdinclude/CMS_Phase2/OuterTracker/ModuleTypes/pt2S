@@ -2,22 +2,22 @@
 
 moduleType pt2S
 // Active silicon size
-width 91.44
-length 100.5
+width 91.44  // 91.440 precisely
+length 100.5 // 100.548 actually
 
 sensorLayout pt
 zCorrelation samesegment
 
 numSensors 2
 
-powerStripChip 0
-powerModuleChip 4700
-powerModuleOptical 0
+powerPerModule 4700  // mW
 
 sensorThickness 0.2
 
 serviceHybridWidth 16.78   // 15.4085 hybrid + 1.3715 inactive silicon // OK
 frontEndHybridWidth 21.725 // 20.625 hybrid  + 1.1    inactive silicon // OK
+hybridThickness 1.0
+supportPlateThickness 0.0
 
 Sensor 1 {
   sensorType strip
@@ -36,5 +36,58 @@ Sensor 2 {
 }
 
 plotColor 2 
+
+ContourPoint 0 {
+  pointY 71.951
+  pointX 62.5
+}
+
+ContourPoint 1 {
+  pointY 71.951
+  pointX 0
+}
+
+ContourPoint 2 {
+  pointY 71.951
+  pointX -62.5
+}
+
+ContourPoint 3 {
+  pointY 42.5
+  pointX -62.5
+}
+
+ContourPoint 4 {
+  pointY 42.5
+  pointX -47.791
+}
+
+ContourPoint 5 {
+  pointY -42.5
+  pointX -47.791
+}
+
+ContourPoint 6 {
+  pointY -42.5
+  pointX -62.5
+}
+
+ContourPoint 7 {
+  pointY -71.951
+  pointX -62.5
+}
+
+ContourPoint 8 {
+  pointY -71.951
+  pointX 0 
+}
+
+ContourPoint 9 {
+  pointY -71.951
+  pointX 62.5
+}
+
+
+
 
 

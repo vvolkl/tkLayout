@@ -1,5 +1,5 @@
 // 3x1 chips pixel module (100um x 100um)
-moduleType pixel_1x3_100x100
+moduleType pixel_1x3_100x100  // pixel modules should always have a type starting with keyword 'pixel_'
 
 // Active silicon size
 width 17
@@ -7,11 +7,11 @@ length 57
 
 numSensors 1
 
-powerStripChip 0
-powerModuleChip 0
-powerModuleOptical 0
+powerPerModule 0 // mW
 
 sensorThickness 0.150
+hybridThickness 0.5
+chipThickness 0.5
 
 Sensor 1 {
   sensorType pixel
@@ -19,6 +19,7 @@ Sensor 1 {
   stripLengthEstimate 0.100
   numROCX 1 
   numROCY 3
+  powerPerChannel 0.0 // mW
 }
 
-plotColor 4
+plotColor 0
