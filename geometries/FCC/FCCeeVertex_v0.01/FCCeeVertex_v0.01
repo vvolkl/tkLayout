@@ -1,0 +1,171 @@
+////////////////////////////////////////////////////////////////////////
+//                                                                    //
+// Main geometry configuration file for FCC-hh tracker geometry v3.03 //
+//                                                                    //
+// Author: Z.Drasal (CERN)                                            //
+//                                                                    //
+////////////////////////////////////////////////////////////////////////
+
+//
+// Simulation run parameters file
+//
+@include SimParms
+
+//
+// Beam-pipe geometry
+//
+BeamPipe Pipe {
+
+// 2D Beam-pipe: original shape withou flanges
+    radius         15.00,15.00 // mm (N-points defining contour)
+    zPos           0.000,18000 // mm (N-points defining contour)
+    thickness      0.8         // N-1 segments thickness in mm
+    radLength      352.8       // N-1 segments rad. length in mm
+    intLength      421.0       // N-1 segments int. length in mm
+
+}
+
+//
+// Tracker geometry
+//
+Tracker Inner {
+
+    // Layout construction parameters
+    bigDelta 5
+    smallDelta 2.5
+    zOverlap 0.0
+    phiOverlap 0.0 
+    rOverlap 0.0 
+    barrelRotation 1.5707963268 // Starts building modules from X=0, Ymax
+    smallParity -1
+    bigParity 1
+    innerRadiusFixed true 
+    outerRadiusFixed true
+    //useMinMaxRCorrect false
+
+    // Detector constraints
+    etaCut 6
+
+    trackingTags inner,tracker
+    
+    Barrel BRL_0 {
+
+      numLayers 3
+      radiusMode fixed
+      //sameRods true
+      
+      Layer 1 {
+       outerZ 125 
+       radius 17.5
+       width 7.8
+       length 28.5
+       physicalLength 28.5
+       bigDelta 1.0
+       smallDelta 0.0
+       zOverlap 0.0
+       startZMode moduleedge
+       moduleType pixel
+       plotColor 2
+       @include Pixel_BRL0_module0.cfg
+       @include Pixel_material_innermost.cfg
+       resLocalRPhi 0.0075 // Pitch ~25um
+       resLocalZ    0.015  // Pitch ~50um
+      }
+      Layer 2 {
+       outerZ 125
+       radius 37.0
+       width 20.18
+       length 41.0
+       physicalLength 41.0
+       bigDelta 1.0
+       smallDelta 0.0
+       zOverlap 0.0
+       moduleType pixel
+       startZMode moduleedge
+       plotColor 2
+       @include Pixel_BRL0_module1.cfg
+       @include Pixel_material_innermost.cfg
+       resLocalRPhi 0.0075 // Pitch ~25um
+       resLocalZ    0.015  // Pitch ~50um
+      }
+      Layer 3 {
+       outerZ 125
+       radius 57.0
+       width 25.6
+       length 41.0
+       physicalLength 41.0
+       bigDelta 1.0
+       smallDelta 0.0
+       zOverlap 0.0
+       moduleType pixel
+       startZMode moduleedge
+       plotColor 2
+       @include Pixel_BRL0_module1.cfg
+       @include Pixel_material_innermost.cfg
+       resLocalRPhi 0.0075 // Pitch ~25um
+       resLocalZ    0.015  // Pitch ~50um
+      }
+
+      innerRadius 23.5 
+      outerRadius 152.5
+      phiSegments 2
+    }
+
+    Endcap ECAP {
+      //@includestd Conversions/flangeTEDD
+          
+      phiSegments 4
+      numDisks 3
+      innerRadius 24
+      outerRadius 102
+      barrelGap 130 // Service channel between BRL & ECAP
+      innerZ 160
+      outerZ 300 
+      alignEdges false
+      moduleShape wedge
+      moduleType pixel    
+ 
+      Disk 1-3 {
+        Ring 1 {
+          waferDiameter 86.2
+          additionalModules 0
+          moduleType pixel
+          @include Pixel_InnerFwd_module0.cfg
+          @include Pixel_material.cfg
+          resLocalRPhi 0.0075 // Pitch ~25um
+          resLocalZ    0.015  // Pitch ~50um
+          plotColor 11 
+        }
+        Ring 2 {
+          waferDiameter 113.0
+          additionalModules 2
+          moduleType pixel
+          @include Pixel_InnerFwd_module1.cfg
+          @include Pixel_material.cfg
+          resLocalRPhi 0.0095 // Pitch ~100/3um
+          resLocalZ    0.030  // Pitch ~100um
+          plotColor 5
+        }
+        Ring 3 {
+          waferDiameter 114.8
+          additionalModules 3
+          moduleType macroPixel
+          @include MacroPixel_InnerFwd_module0.cfg
+          @include MacroPixel_material.cfg
+          resLocalRPhi 0.0095 // Pitch ~100/3um
+          resLocalZ    0.115  // Pitch ~400um
+          plotColor 7
+        }
+        Ring 4 {
+          waferDiameter 112.6
+          additionalModules 4
+          moduleType macroPixel
+          @include MacroPixel_InnerFwd_module1.cfg
+          @include MacroPixel_material.cfg
+          resLocalRPhi 0.0095 // Pitch ~100/3um
+          resLocalZ    0.115  // Pitch ~400um
+          plotColor 7
+        }
+      }
+  }
+}

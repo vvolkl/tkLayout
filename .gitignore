@@ -6,4 +6,9 @@ run
 .project
 .cproject
 .settings
-/results/
+result
+results
+*.png
+*pdf 
+*.root
+*.html
